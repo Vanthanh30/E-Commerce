@@ -4,13 +4,13 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace server\" \"npm run dev --workspace client\"",
-    "build": "npm run build --workspace client",
+    "dev": "concurrently \"npm run dev --workspace server\" \"npm run dev --workspace frontend\"",
+    "build": "npm run build --workspace frontend",
     "start": "npm run start --workspace server"
   },
   "workspaces": [
     "server",
-    "client"
+    "frontend"
   ],
   "devDependencies": {
     "concurrently": "^9.2.1"
