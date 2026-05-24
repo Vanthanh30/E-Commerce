@@ -1,19 +1,34 @@
 import mongoose from "mongoose";
 
 const bargainDetailSchema = new mongoose.Schema(
-  {
-    round: { type: Number, required: true },
-    price: { type: Number, default: 0 },
-    quantity: { type: Number, default: 1 },
-    time: { type: Date, default: Date.now },
-    note: { type: String, default: "" },
-    status: {
-      type: String,
-      enum: ["pending", "countered", "accepted", "rejected"],
-      default: "pending"
-    }
+{
+  round: Number,
+
+  customerPrice: Number,
+
+  botPrice: Number,
+
+  customerMessage: String,
+
+  botMessage: String,
+
+  quantity: Number,
+
+  status: {
+    type: String,
+    enum: [
+      "countered",
+      "accepted",
+      "rejected"
+    ]
   },
-  { _id: false }
+
+  time: {
+    type: Date,
+    default: Date.now
+  }
+},
+{ _id: false }
 );
 
 const bargainSchema = new mongoose.Schema(
@@ -22,7 +37,21 @@ const bargainSchema = new mongoose.Schema(
     customerId: { type: String, required: true, index: true },
     productId: { type: String, required: true, index: true },
     quantity: { type: Number, default: 1 },
-    details: { type: [bargainDetailSchema], default: [] }
+
+      //Bargain status
+    status: {
+      type: String,
+      enum: ["negotiating", "accepted", "rejected", "expired"],
+      default: "negotiating"
+    },
+
+    expiredAt: {
+      type: Date,
+      required: true
+    },
+
+    details: { type: [bargainDetailSchema], default: [] },
+
   },
   { timestamps: true }
 );

@@ -3,6 +3,7 @@ import Customer from "../models/customer.model.js";
 import Product from "../models/product.model.js";
 import { createSingleItemOrder } from "../helpers/order.helper.js";
 import { bargainStatus } from "../helpers/status.helper.js";
+import { processBargain } from "../services/bargain.service.js";
 
 const MAX_BARGAIN_ROUNDS = 3;
 
@@ -75,56 +76,134 @@ export async function getBargain(req, res) {
 }
 
 export async function createBargain(req, res) {
-  const customerId = req.body.customerId;
-  const productId = req.body.productId;
-  const bargainId = `${customerId}${productId}`;
-  let bargain = await Bargain.findOne({ bargainId });
 
+  const customerId = req.body.customerId;
+
+  const productId = req.body.productId;
+
+  const offerPrice = Number(req.body.price || 0);
+
+  const quantity = Number(req.body.quantity || 1);
+
+  const customerMessage = req.body.note || "";
+
+  const product = await Product.findOne({
+    productId
+  });
+
+  if (!product) {
+    return res.status(404).json({
+      message: "Product not found"
+    });
+  }
+
+  const bargainId = `${customerId}_${productId}`;
+
+  let bargain = await Bargain.findOne({
+    bargainId
+  });
+
+  // tạo session mới
   if (!bargain) {
+
     bargain = await Bargain.create({
       bargainId,
       customerId,
       productId,
-      quantity: Number(req.body.quantity || 1),
+      quantity,
+      
+      // Giảm time xuống 1p để test
+      expiredAt: new Date(
+        Date.now() + 20 * 60 * 1000
+      ),
+
       details: []
     });
   }
 
-  const latest = lastDetail(bargain);
-  if (latest) {
-    if (isFinal(latest.status)) {
-      res.status(409).json({ message: "This bargain has ended" });
-      return;
-    }
+  // hết hạn
+  if (new Date() > bargain.expiredAt) {
 
-    if (latest.status === "pending") {
-      res.status(409).json({ message: "Waiting for admin response" });
-      return;
-    }
+    bargain.status = "expired";
 
-    if (latest.status !== "countered") {
-      res.status(409).json({ message: "Current bargain status cannot continue" });
-      return;
-    }
+    await bargain.save();
 
-    if (Number(latest.round) >= MAX_BARGAIN_ROUNDS) {
-      res.status(400).json({ message: "Maximum 3 bargain rounds reached" });
-      return;
-    }
+    return res.status(400).json({
+      message: "Bargain session expired"
+    });
   }
 
-  const round = latest ? Number(latest.round) + 1 : 1;
+  // session kết thúc
+  if (
+    bargain.status === "accepted" ||
+    bargain.status === "rejected"
+  ) {
+    return res.status(400).json({
+      message: "Bargain ended"
+    });
+  }
+
+  // round hiện tại
+  const round = bargain.details.length + 1;
+
+  // quá số round
+  if (round > 3) {
+    return res.status(400).json({
+      message: "Maximum rounds reached"
+    });
+  }
+
+  // bot xử lý
+  const result = processBargain({
+    product,
+    offerPrice,
+    round
+  });
+
+  // lưu lịch sử
   bargain.details.push({
     round,
-    price: Number(req.body.price || 0),
-    quantity: Number(req.body.quantity || 1),
-    time: new Date(),
-    note: req.body.note || "",
-    status: "pending"
+
+    customerPrice: offerPrice,
+
+    botPrice: result.botPrice,
+
+    quantity,
+
+    customerMessage,
+
+    botMessage: result.botMessage,
+
+    status: result.status,
+
+    time: new Date()
   });
+
+  // update session status
+  if (
+    result.status === "accepted" ||
+    result.status === "rejected"
+  ) {
+    bargain.status = result.status;
+  }
+
   await bargain.save();
 
-  res.status(201).json({ bargainId, round, statusText: bargainStatus(round, "pending") });
+  return res.json({
+    success: true,
+
+    bargainId,
+
+    round,
+
+    status: result.status,
+
+    customerPrice: offerPrice,
+
+    botPrice: result.botPrice,
+
+    botMessage: result.botMessage
+  });
 }
 
 export async function respondBargain(req, res) {

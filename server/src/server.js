@@ -43,6 +43,24 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/bargains", bargainRoutes);
 app.use("/api/stats", statsRoutes);
 
+import Product from "./models/product.model.js";
+
+app.get("/api/test/create-product", async (_req, res) => {
+
+  const product = await Product.create({
+    productId: "PR001",
+    name: "Iphone 15",
+
+    fixedPrice: 1000000,
+
+    minPrice: 600000,
+
+    stock: 10
+  });
+
+  res.json(product);
+});
+
 app.use(notFound);
 app.use(errorHandler);
 
