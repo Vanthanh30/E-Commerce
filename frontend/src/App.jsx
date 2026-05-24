@@ -57,9 +57,7 @@ function App() {
           <Route path="stats" element={role === "admin" ? <RevenueStats /> : <Navigate to="/login" />} />
           <Route path="biddingdetails" element={role === "admin" ? <BiddingDetails /> : <Navigate to="/login" />} />
           <Route path="category" element={role === "admin" ? <Category /> : <Navigate to="/login" />} />
-          <Route path="cart/create" element={role === "admin" ? <CartCreate /> : <Navigate to="/login" />} />
-          <Route path="cart/:id" element={role === "admin" ? <CartDetails /> : <Navigate to="/login" />} />
-          <Route path="cart/delete/:id" element={role === "admin" ? <CartDelete /> : <Navigate to="/login" />} />
+          <Route path="orders" element={role === "admin" ? <AdminOrders /> : <Navigate to="/login" />} />
         </Route>
 
       </Routes>
