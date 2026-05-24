@@ -53,12 +53,15 @@ function App() {
 
         {/* Admin — bọc trong AdminLayout, yêu cầu role admin */}
         <Route path="/admin" element={<AdminLayout />}>
-          <Route path="products" element={<AdminProductList />} />
-          <Route path="stats" element={<RevenueStats />} />
-          <Route path="biddingdetails" element={<BiddingDetails />} />
-          <Route path="category" element={<Category />} />
-          <Route path="orders" element={<AdminOrders />} />
+          <Route path="products" element={role === "admin" ? <AdminProductList /> : <Navigate to="/login" />} />
+          <Route path="stats" element={role === "admin" ? <RevenueStats /> : <Navigate to="/login" />} />
+          <Route path="biddingdetails" element={role === "admin" ? <BiddingDetails /> : <Navigate to="/login" />} />
+          <Route path="category" element={role === "admin" ? <Category /> : <Navigate to="/login" />} />
+          <Route path="cart/create" element={role === "admin" ? <CartCreate /> : <Navigate to="/login" />} />
+          <Route path="cart/:id" element={role === "admin" ? <CartDetails /> : <Navigate to="/login" />} />
+          <Route path="cart/delete/:id" element={role === "admin" ? <CartDelete /> : <Navigate to="/login" />} />
         </Route>
+
       </Routes>
     </BrowserRouter>
   );
