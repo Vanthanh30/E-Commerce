@@ -3,13 +3,17 @@ import {
   createBargain,
   getBargain,
   listBargains,
-  respondBargain
+  respondBargain,
+  chatBargain
 } from "../controllers/bargain.controller.js";
 import { asyncHandler } from "../helpers/asyncHandler.js";
 
 const router = Router();
 
 router.get("/", asyncHandler(listBargains));
+// chat
+router.post("/chat", asyncHandler(chatBargain));
+//
 router.get("/:id", asyncHandler(getBargain));
 router.post("/", asyncHandler(createBargain));
 router.post("/:id/respond", asyncHandler(respondBargain));

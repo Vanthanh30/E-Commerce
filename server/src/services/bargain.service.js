@@ -57,7 +57,7 @@ export function processBargain({
 
       botPrice: requiredPrice,
 
-      botMessage: `Shop từ chối. Giá cuối là ${requiredPrice} VNĐ`
+      botMessage: `Shop từ chối mức giá ${offerPrice} VNĐ. Cảm ơn bạn đã tham gia mặc cả`
     };
   }
 

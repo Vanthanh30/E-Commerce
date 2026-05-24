@@ -112,7 +112,6 @@ export async function createBargain(req, res) {
       productId,
       quantity,
       
-      // Giảm time xuống 1p để test
       expiredAt: new Date(
         Date.now() + 20 * 60 * 1000
       ),
@@ -274,5 +273,98 @@ export async function respondBargain(req, res) {
     round: current.round,
     statusText: bargainStatus(current.round, nextStatus),
     invoiceId
+  });
+}
+
+// chat
+export async function chatBargain(req, res) {
+
+  const {
+    customerId,
+    productId,
+    offerPrice
+  } = req.body;
+
+  const product = await Product.findOne({
+    productId
+  });
+
+  if (!product) {
+
+    return res.status(404).json({
+      message: "Product not found"
+    });
+  }
+
+  const bargainId =
+    `${customerId}_${productId}`;
+
+  let bargain = await Bargain.findOne({
+    bargainId
+  });
+
+  if (!bargain) {
+
+    bargain = await Bargain.create({
+
+      bargainId,
+
+      customerId,
+
+      productId,
+
+      expiredAt: new Date(
+        Date.now() + 20 * 60 * 1000
+      ),
+
+      details: []
+    });
+  }
+
+  const round =
+    bargain.details.length + 1;
+
+  if (round > 3) {
+
+    return res.status(400).json({
+      message: "Phiên mặc cả đã kết thúc"
+    });
+  }
+
+  const result = processBargain({
+
+    product,
+
+    offerPrice: Number(offerPrice),
+
+    round
+  });
+
+  bargain.details.push({
+
+    round,
+
+    price: Number(offerPrice),
+
+    quantity: 1,
+
+    note: result.botMessage,
+
+    status: result.status,
+
+    time: new Date()
+  });
+
+  await bargain.save();
+
+  res.json({
+
+    round,
+
+    status: result.status,
+
+    botPrice: result.botPrice,
+
+    botMessage: result.botMessage
   });
 }
