@@ -8,8 +8,8 @@ import {
   BarElement,
   Tooltip,
 } from "chart.js";
-import { statsService } from "../../services/admin/stats.service";
-import { currency } from "../../utils/formatters";
+import { statsService } from "../../../services/admin/stats.service";
+import { currency } from "../../../utils/formatters";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 

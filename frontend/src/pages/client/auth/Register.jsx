@@ -1,29 +1,42 @@
-// src/pages/client/Register.jsx
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { authService } from "../../services/client/auth.service";
+import { Link, useNavigate } from "react-router-dom";
+import { authService } from "../../../services/client/auth.service";
+
+const initialFormData = {
+  username: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  fullName: "",
+  phoneNumber: "",
+  birthDate: "",
+  address: "",
+};
+
+const twoColGrid = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "16px",
+};
 
 export const Register = () => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    fullName: "",
-    phoneNumber: "",
-    address: "",
-    birthDate: "",
-  });
+  const [formData, setFormData] = useState(initialFormData);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (event) => {
+    setFormData({ ...formData, [event.target.name]: event.target.value });
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
+  const handleRegister = async (event) => {
+    event.preventDefault();
     setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+
     try {
       await authService.register(formData);
       alert("Đăng ký tài khoản Atelier Accord thành công!");
@@ -40,14 +53,17 @@ export const Register = () => {
       <div className="auth-brand">
         <div
           className="auth-brand-bg"
-          style={{ backgroundImage: "url('/images/auth-hero.png')" }}
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80')",
+          }}
         ></div>
         <div className="auth-brand-content">
           <span className="auth-badge">THÀNH VIÊN MỚI</span>
           <h1>Tham gia Atelier Accord</h1>
           <p>
-            Đăng ký để trải nghiệm mua sắm, thương lượng giá và quản lý đơn hàng
-            trong không gian nội thất cao cấp.
+            Đăng ký để trải nghiệm mua sắm, thương lượng giá và quản lý đơn
+            hàng trong không gian nội thất cao cấp.
           </p>
         </div>
       </div>
@@ -74,110 +90,113 @@ export const Register = () => {
         )}
 
         <form onSubmit={handleRegister}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px",
-            }}
-          >
+          {/* Row 1: Username + Email */}
+          <div style={twoColGrid}>
             <div className="form-group">
-              <label>Tên đăng nhập</label>
+              <label htmlFor="username">Tên đăng nhập</label>
               <input
+                id="username"
                 type="text"
                 name="username"
                 className="form-control"
+                value={formData.username}
                 onChange={handleChange}
                 required
               />
             </div>
             <div className="form-group">
-              <label>Email</label>
+              <label htmlFor="email">Email</label>
               <input
+                id="email"
                 type="email"
                 name="email"
                 className="form-control"
+                value={formData.email}
                 onChange={handleChange}
                 required
               />
             </div>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px",
-            }}
-          >
+          {/* Row 2: Password + Confirm */}
+          <div style={twoColGrid}>
             <div className="form-group">
-              <label>Mật khẩu</label>
+              <label htmlFor="password">Mật khẩu</label>
               <input
+                id="password"
                 type="password"
                 name="password"
                 className="form-control"
+                value={formData.password}
                 onChange={handleChange}
                 required
               />
             </div>
             <div className="form-group">
-              <label>Xác nhận mật khẩu</label>
+              <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
               <input
+                id="confirmPassword"
                 type="password"
                 name="confirmPassword"
                 className="form-control"
+                value={formData.confirmPassword}
                 onChange={handleChange}
                 required
               />
             </div>
           </div>
 
+          {/* Row 3: Full name - full width */}
           <div className="form-group">
-            <label>Họ và tên</label>
+            <label htmlFor="fullName">Họ và tên</label>
             <input
+              id="fullName"
               type="text"
               name="fullName"
               className="form-control"
+              value={formData.fullName}
               onChange={handleChange}
               required
             />
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px",
-            }}
-          >
+          {/* Row 4: Phone + Birth date */}
+          <div style={twoColGrid}>
             <div className="form-group">
-              <label>Số điện thoại (ID)</label>
+              <label htmlFor="phoneNumber">Số điện thoại</label>
               <input
+                id="phoneNumber"
                 type="text"
                 name="phoneNumber"
                 className="form-control"
+                value={formData.phoneNumber}
                 onChange={handleChange}
                 required
               />
             </div>
             <div className="form-group">
-              <label>Ngày sinh</label>
+              <label htmlFor="birthDate">Ngày sinh</label>
               <input
+                id="birthDate"
                 type="date"
                 name="birthDate"
                 className="form-control"
+                value={formData.birthDate}
                 onChange={handleChange}
                 required
               />
             </div>
           </div>
 
+          {/* Row 5: Address - full width */}
           <div className="form-group">
-            <label>Địa chỉ</label>
+            <label htmlFor="address">Địa chỉ</label>
             <input
+              id="address"
               type="text"
               name="address"
               className="form-control"
+              value={formData.address}
               onChange={handleChange}
               required
             />
@@ -199,7 +218,7 @@ export const Register = () => {
           Đã có tài khoản?{" "}
           <Link
             to="/login"
-            style={{ color: "var(--primary)", fontWeight: "600" }}
+            style={{ color: "var(--primary)", fontWeight: 600 }}
           >
             Đăng nhập
           </Link>

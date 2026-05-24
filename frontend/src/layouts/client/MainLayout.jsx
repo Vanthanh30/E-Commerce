@@ -14,9 +14,10 @@ export const MainLayout = () => {
 
         <nav className="site-nav">
           <Link to="/">Cửa hàng</Link>
-          <Link to="/negotiate">Thương lượng</Link>
+          <Link to="/negotiation-history">Thương lượng</Link>
           <Link to="/cart">Giỏ hàng</Link>
           <Link to="/orders">Đơn hàng</Link>
+          <Link to="/contact">Liên hệ</Link>
         </nav>
 
         <div className="header-actions">
@@ -46,7 +47,7 @@ export const MainLayout = () => {
           <Link to="#">Privacy</Link>
           <Link to="#">Terms</Link>
           <Link to="#">Shipping</Link>
-          <Link to="#">Contact</Link>
+          <Link to="/contact">Contact</Link>
         </div>
       </footer>
     </>

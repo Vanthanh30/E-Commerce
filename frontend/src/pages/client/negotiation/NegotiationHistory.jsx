@@ -1,7 +1,7 @@
 // src/pages/client/NegotiationHistory.jsx
 import React, { useState, useEffect } from "react";
-import { bargainService } from "../../services/client/bargain.service";
-import { currency, dateTime } from "../../utils/formatters";
+import { bargainService } from "../../../services/client/bargain.service";
+import { currency, dateTime } from "../../../utils/formatters";
 
 export const NegotiationHistory = () => {
   const [history, setHistory] = useState([]);

@@ -1,10 +1,11 @@
-// src/pages/client/Profile.jsx
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../../context/AuthContext";
-import { authService } from "../../services/client/auth.service";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
+import { authService } from "../../../services/client/auth.service";
 
 export const Profile = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [formData, setFormData] = useState({
@@ -18,67 +19,90 @@ export const Profile = () => {
   });
 
   useEffect(() => {
-    if (user?.customerId) {
-      const loadProfile = async () => {
-        try {
-          const profileData = await authService.getCustomer(user.customerId);
-          // Định dạng ngày sinh thành yyyy-MM-dd để đẩy vào thẻ <input type="date">
-          const formattedDate = profileData.birthDate
-            ? profileData.birthDate.substring(0, 10)
-            : "";
-
-          setFormData({
-            username: profileData.username || "",
-            fullName: profileData.fullName || "",
-            address: profileData.address || "",
-            birthDate: formattedDate,
-            email: profileData.email || "",
-            oldPassword: "",
-            newPassword: "",
-          });
-          setLoading(false);
-        } catch (err) {
-          console.error(err);
-          setLoading(false);
-        }
-      };
-      loadProfile();
+    if (!user?.customerId) {
+      setLoading(false);
+      return;
     }
+
+    const loadProfile = async () => {
+      try {
+        const profileData = await authService.getCustomer(user.customerId);
+        setFormData({
+          username: profileData.username || "",
+          fullName: profileData.fullName || "",
+          address: profileData.address || "",
+          birthDate: profileData.birthDate
+            ? profileData.birthDate.substring(0, 10)
+            : "",
+          email: profileData.email || "",
+          oldPassword: "",
+          newPassword: "",
+        });
+      } catch (error) {
+        console.error("Lỗi tải thông tin cá nhân:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProfile();
   }, [user]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (event) => {
+    setFormData({ ...formData, [event.target.name]: event.target.value });
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
+  const handleUpdate = async (event) => {
+    event.preventDefault();
     setMessage({ type: "", text: "" });
+
     try {
       await authService.updateCustomer(user.customerId, formData);
       setMessage({
         type: "success",
-        text: "Cập nhật hồ sơ thành viên Atelier Accord thành công!",
+        text: "Cập nhật hồ sơ tài khoản Atelier Accord thành công!",
       });
-      setFormData({ ...formData, oldPassword: "", newPassword: "" }); // Reset fields mật khẩu
-    } catch (err) {
+      setFormData({ ...formData, oldPassword: "", newPassword: "" });
+    } catch (error) {
       setMessage({
         type: "danger",
-        text: err.message || "Mật khẩu cũ không chính xác.",
+        text: error.message || "Mật khẩu cũ không chính xác.",
       });
     }
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="page-container">
         Đang đọc thông tin hồ sơ tài khoản...
       </div>
     );
+  }
+
+  if (!user?.customerId) {
+    return (
+      <div className="page-container" style={{ maxWidth: "640px" }}>
+        <h1 className="page-title">Thông tin cá nhân</h1>
+        <p className="page-subtitle">
+          Vui lòng đăng nhập để quản lý hồ sơ tài khoản Atelier Accord.
+        </p>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => navigate("/login")}
+        >
+          Đăng nhập
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container" style={{ maxWidth: "640px" }}>
       <h1 className="page-title">Thông tin cá nhân</h1>
-      <p className="page-subtitle">Quản lý hồ sơ tài khoản Atelier Accord.</p>
+      <p className="page-subtitle">
+        Quản lý hồ sơ tài khoản Atelier Accord.
+      </p>
 
       <div className="negotiation-card">
         {message.text && (
@@ -87,7 +111,7 @@ export const Profile = () => {
               color:
                 message.type === "success" ? "var(--primary)" : "var(--danger)",
               marginBottom: "16px",
-              fontWeight: "500",
+              fontWeight: 500,
             }}
           >
             {message.text}
@@ -96,13 +120,12 @@ export const Profile = () => {
 
         <form onSubmit={handleUpdate}>
           <div className="form-group">
-            <label>Số điện thoại tài khoản (Mã định danh)</label>
+            <label>Số điện thoại</label>
             <input
               type="text"
               className="form-control"
-              value={user?.customerId || ""}
+              value={user.customerId}
               readOnly
-              disabled
             />
           </div>
 
@@ -119,7 +142,7 @@ export const Profile = () => {
           </div>
 
           <div className="form-group">
-            <label>Địa chỉ nhận hàng</label>
+            <label>Địa chỉ</label>
             <input
               type="text"
               name="address"
@@ -154,43 +177,32 @@ export const Profile = () => {
             />
           </div>
 
-          <div
-            style={{
-              borderTop: "1px dashed var(--border-warm)",
-              paddingDelay: "16px",
-              marginTop: "24px",
-              paddingTop: "16px",
-            }}
-          >
-            <div className="form-group">
-              <label style={{ color: "var(--primary)" }}>
-                Mật khẩu cũ (Cần thiết để thay đổi)
-              </label>
-              <input
-                type="password"
-                name="oldPassword"
-                className="form-control"
-                value={formData.oldPassword}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Mật khẩu mới</label>
-              <input
-                type="password"
-                name="newPassword"
-                className="form-control"
-                value={formData.newPassword}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <div className="form-group">
+            <label>Mật khẩu cũ</label>
+            <input
+              type="password"
+              name="oldPassword"
+              className="form-control"
+              value={formData.oldPassword}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           <div className="form-group">
-            <label>Địa chỉ Email</label>
+            <label>Mật khẩu mới</label>
+            <input
+              type="password"
+              name="newPassword"
+              className="form-control"
+              value={formData.newPassword}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Email</label>
             <input
               type="email"
               name="email"

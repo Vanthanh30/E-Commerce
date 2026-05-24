@@ -1,7 +1,7 @@
 // src/pages/client/Cart.jsx
 import React, { useState, useEffect } from "react";
-import { cartService } from "../../services/client/cart.service";
-import { currency } from "../../utils/formatters";
+import { cartService } from "../../../services/client/cart.service";
+import { currency } from "../../../utils/formatters";
 
 export const Cart = () => {
   const [cartItems, setCartItems] = useState([]);

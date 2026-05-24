@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import { orderService } from "../../services/order.service";
-import { currency } from "../../utils/formatters";
+import { useAuth } from "../../../context/AuthContext";
+import { orderService } from "../../../services/order.service";
+import { currency } from "../../../utils/formatters";
 
 export const Checkout = () => {
   const location = useLocation();
