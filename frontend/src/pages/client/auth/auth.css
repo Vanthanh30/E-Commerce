@@ -1,0 +1,120 @@
+/* Khung cha full toàn màn hình, khống chế chiều cao không quá 100vh */
+.auth-container-fullscreen {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--surface, #ffffff);
+}
+
+/* Panel chứa form nhập liệu bên phải */
+.auth-panel-compact {
+  flex: 1;
+  max-width: 460px;
+  height: 100%;
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  background: #ffffff;
+}
+
+/* Tiêu đề chính */
+.auth-panel-compact h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--text, #191919);
+  letter-spacing: -0.5px;
+}
+
+.auth-panel-compact .lead {
+  font-size: 14px;
+  color: var(--text-muted, #6f6a63);
+  margin-bottom: 24px;
+}
+
+/* Tối ưu khoảng cách các ô nhập liệu gọn lại */
+.auth-panel-compact .form-group {
+  margin-bottom: 14px;
+}
+
+.auth-panel-compact .form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text, #191919);
+}
+
+.auth-panel-compact .form-control {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border, #e5e5e5);
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.auth-panel-compact .form-control:focus {
+  border-color: var(--primary, #1f6c55);
+  outline: none;
+}
+
+/* Wrapper cho ô mật khẩu để chứa icon */
+.password-input-wrapper {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.password-input-wrapper .prefix-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+  font-size: 18px;
+}
+
+.password-input-wrapper .form-control {
+  padding-left: 38px;
+  padding-right: 38px;
+}
+
+.password-input-wrapper .toggle-password-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  color: #9ca3af;
+}
+
+/* Nút quay lại shop */
+.back-to-shop-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted, #6f6a63);
+  text-decoration: none;
+  font-size: 13px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.back-to-shop-link:hover {
+  color: var(--primary, #1f6c55);
+}

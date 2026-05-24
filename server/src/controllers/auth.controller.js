@@ -1,7 +1,11 @@
 import Customer from "../models/customer.model.js";
 import User from "../models/user.model.js";
 import { generateRsaKeys } from "../helpers/crypto.helper.js";
-import { hashPassword, isPasswordHashed, verifyPassword } from "../helpers/password.helper.js";
+import {
+  hashPassword,
+  isPasswordHashed,
+  verifyPassword,
+} from "../helpers/password.helper.js";
 
 function publicCustomer(customer) {
   if (!customer) return null;
@@ -12,7 +16,7 @@ function publicCustomer(customer) {
     birthDate: customer.birthDate,
     username: customer.username,
     email: customer.email,
-    accountStatus: customer.accountStatus
+    accountStatus: customer.accountStatus,
   };
 }
 
@@ -23,10 +27,10 @@ export async function login(req, res) {
   const admin = await User.findOne({
     username,
     role: "admin",
-    status: 1
+    status: 1,
   });
 
-  if (admin && await verifyPassword(password, admin.password)) {
+  if (admin && (await verifyPassword(password, admin.password))) {
     if (!isPasswordHashed(admin.password)) {
       admin.password = await hashPassword(password);
       await admin.save();
@@ -37,15 +41,15 @@ export async function login(req, res) {
       user: {
         userId: admin._id.toString(),
         fullName: admin.fullName || admin.username,
-        username: admin.username
-      }
+        username: admin.username,
+      },
     });
     return;
   }
 
   const user = await Customer.findOne({
     username,
-    accountStatus: 1
+    accountStatus: 1,
   });
 
   if (!user || !(await verifyPassword(password, user.password))) {
@@ -70,11 +74,13 @@ export async function register(req, res) {
     fullName,
     phoneNumber,
     address,
-    birthDate
+    birthDate,
   } = req.body;
 
   if (!username || !password || !phoneNumber) {
-    res.status(400).json({ message: "Missing username, password, or phone number" });
+    res
+      .status(400)
+      .json({ message: "Missing username, password, or phone number" });
     return;
   }
 
@@ -84,11 +90,13 @@ export async function register(req, res) {
   }
 
   const existing = await Customer.findOne({
-    $or: [{ customerId: phoneNumber }, { username }]
+    $or: [{ customerId: phoneNumber }, { username }],
   }).lean();
 
   if (existing) {
-    res.status(409).json({ message: "Phone number or username already exists" });
+    res
+      .status(409)
+      .json({ message: "Phone number or username already exists" });
     return;
   }
 
@@ -103,7 +111,7 @@ export async function register(req, res) {
     email: email || "",
     accountStatus: 1,
     privateKey,
-    publicKey
+    publicKey,
   });
 
   res.status(201).json({ message: "Register successfully" });
@@ -121,14 +129,8 @@ export async function getCustomer(req, res) {
 
 export async function updateCustomer(req, res) {
   const username = req.body.username || req.body.userName;
-  const {
-    fullName,
-    address,
-    birthDate,
-    oldPassword,
-    newPassword,
-    email
-  } = req.body;
+  const { fullName, address, birthDate, oldPassword, newPassword, email } =
+    req.body;
 
   const customer = await Customer.findOne({ customerId: req.params.id });
 
@@ -141,7 +143,9 @@ export async function updateCustomer(req, res) {
   customer.address = address;
   customer.birthDate = birthDate || null;
   customer.username = username;
-  customer.password = await hashPassword(newPassword);
+  if (newPassword && newPassword.trim() !== "") {
+    customer.password = await hashPassword(newPassword);
+  }
   customer.email = email;
   await customer.save();
 

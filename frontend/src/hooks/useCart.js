@@ -1,0 +1,77 @@
+import { useState, useEffect, useCallback } from "react";
+import { cartService } from "../services/client/cartService";
+
+export const useCart = () => {
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Dùng useCallback để hàm không bị tạo lại mỗi lần render
+  const fetchCartData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const user = JSON.parse(sessionStorage.getItem("user"));
+      if (!user || !user.customerId) return;
+
+      // Gọi service với customerId lấy từ sessionStorage
+      const response = await cartService.getCart(user.customerId);
+      setCartItems(response.items || response.data || response || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Tải dữ liệu ngay khi khởi tạo Hook
+  useEffect(() => {
+    const user = sessionStorage.getItem("user");
+    if (user) fetchCartData();
+    else setLoading(false);
+  }, [fetchCartData]);
+
+  const updateQuantity = async (productId, currentQty, delta) => {
+    const newQty = currentQty + delta;
+    if (newQty < 1) return;
+
+    try {
+      await cartService.updateQuantity(productId, newQty);
+      setCartItems((prev) =>
+        prev.map((item) =>
+          item.productId === productId ? { ...item, quantity: newQty } : item,
+        ),
+      );
+    } catch (err) {
+      alert("Không thể cập nhật số lượng.");
+    }
+  };
+
+  const removeItem = async (productId) => {
+    if (!window.confirm("Xóa sản phẩm khỏi giỏ hàng?")) return;
+    try {
+      await cartService.removeItem(productId);
+      setCartItems((prev) =>
+        prev.filter((item) => item.productId !== productId),
+      );
+    } catch (err) {
+      alert("Không thể xóa sản phẩm.");
+    }
+  };
+
+  const calculateTotal = () => {
+    return cartItems.reduce(
+      (sum, item) => sum + (item.fixedPrice || item.price || 0) * item.quantity,
+      0,
+    );
+  };
+
+  return {
+    cartItems,
+    loading,
+    error,
+    updateQuantity,
+    removeItem,
+    calculateTotal,
+    fetchCartData,
+  };
+};

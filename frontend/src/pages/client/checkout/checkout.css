@@ -1,0 +1,122 @@
+.checkout-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 24px;
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.checkout-form-section {
+  background: #ffffff;
+  padding: 32px;
+  border: 1px solid var(--border, #eee);
+  border-radius: 8px;
+}
+
+.checkout-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 24px;
+  color: var(--text);
+  border-bottom: 1px solid #eee;
+  padding-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.payment-methods-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.payment-method-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border, #eee);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.payment-method-option input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.payment-method-option.active {
+  border-color: var(--primary, #1f6c55);
+  background-color: #f4faf8;
+}
+
+/* Cột tóm tắt đơn hàng bên phải */
+.checkout-summary-section {
+  background: #f9fafb;
+  padding: 24px;
+  border: 1px solid var(--border, #eee);
+  border-radius: 8px;
+}
+
+.checkout-items-review {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 320px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  padding-right: 4px;
+}
+
+.checkout-item-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.checkout-item-img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #f5f5f5;
+}
+
+.checkout-item-info {
+  flex: 1;
+}
+
+.checkout-item-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.checkout-item-info p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.checkout-item-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .checkout-grid {
+    grid-template-columns: 1fr;
+  }
+}
