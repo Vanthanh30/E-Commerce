@@ -1,0 +1,466 @@
+/* =============================================
+   Home.module.css
+   ============================================= */
+
+/* ── Hero ── */
+.hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+    padding: 80px 48px;
+    min-height: 80vh;
+}
+
+.heroContent {
+    max-width: 520px;
+}
+
+.heroSubtitle {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted, #888);
+    margin-bottom: 16px;
+}
+
+.heroContent h1 {
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-weight: 300;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    color: var(--text, #1a1a18);
+}
+
+.heroAccent {
+    color: var(--primary, #1f6c55);
+    font-style: italic;
+}
+
+.heroDesc {
+    font-size: 15px;
+    color: var(--text-muted, #888);
+    line-height: 1.7;
+    margin-bottom: 32px;
+    max-width: 400px;
+}
+
+.heroActions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.heroVisual {
+    position: relative;
+}
+
+.heroVisual img {
+    width: 100%;
+    aspect-ratio: 4/5;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.heroQuote {
+    position: absolute;
+    bottom: 24px;
+    left: -24px;
+    background: var(--bg, #fafaf8);
+    border-left: 3px solid var(--primary, #1f6c55);
+    padding: 14px 18px;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-muted, #888);
+    max-width: 300px;
+    line-height: 1.5;
+    box-shadow: 0 4px 20px rgba(0 0 0 / 0.08);
+}
+
+/* ── Section header ── */
+.sectionHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 48px 48px 24px;
+}
+
+.sectionTitle {
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--text, #1a1a18);
+}
+
+.sectionMeta {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--text-muted, #888);
+}
+
+/* ── Category grid ── */
+.categoryGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 16px;
+    padding: 0 48px 48px;
+}
+
+.categoryCard {
+    position: relative;
+    border-radius: 4px;
+    overflow: hidden;
+    min-height: 240px;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+}
+
+.cat1 {
+    background-image: url("https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80");
+}
+
+.cat2 {
+    background-image: url("https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=600&q=80");
+}
+
+.cat3 {
+    background-image: url("https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=80");
+}
+
+.categoryCard::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0 0 0 / 0.6), transparent);
+}
+
+.categoryContent {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 24px;
+    z-index: 1;
+    color: #fff;
+}
+
+.categoryContent h3 {
+    font-size: 1.1rem;
+    font-weight: 400;
+    margin-bottom: 4px;
+}
+
+.categoryContent p {
+    font-size: 12px;
+    opacity: 0.8;
+    letter-spacing: 0.05em;
+}
+
+/* ── Products grid ── */
+.productsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    padding: 0 48px 64px;
+}
+
+.productCard {
+    cursor: pointer;
+}
+
+.productImageContainer {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 3/4;
+    background: var(--bg-card, #f5f4f1);
+    border-radius: 2px;
+    margin-bottom: 14px;
+}
+
+.productBadge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    background: var(--primary, #1f6c55);
+    color: #fff;
+    border-radius: 2px;
+}
+
+.productImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.productCard:hover .productImg {
+    transform: scale(1.04);
+}
+
+.productActions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    gap: 6px;
+    padding: 12px;
+    background: linear-gradient(to top, rgba(0 0 0 / 0.5), transparent);
+    opacity: 0;
+    transition: opacity 0.25s;
+}
+
+.productCard:hover .productActions {
+    opacity: 1;
+}
+
+.actionBtn {
+    flex: 1;
+    padding: 7px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    border: 1px solid rgba(255 255 255 / 0.7);
+    border-radius: 2px;
+    background: rgba(255 255 255 / 0.15);
+    color: #fff;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+}
+
+.actionBtnPrimary {
+    composes: actionBtn;
+    background: var(--primary, #1f6c55);
+    border-color: var(--primary, #1f6c55);
+}
+
+.actionBtn:hover {
+    background: rgba(255 255 255 / 0.35);
+}
+
+.actionBtnPrimary:hover {
+    background: var(--primary-dark, #165948);
+}
+
+.productInfo {
+    padding: 0 2px;
+}
+
+.productName {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text, #1a1a18);
+    margin-bottom: 4px;
+}
+
+.productDesc {
+    font-size: 12px;
+    color: var(--text-muted, #888);
+    margin-bottom: 6px;
+}
+
+.productPrice {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary, #1f6c55);
+}
+
+/* ── Deal section ── */
+.dealSection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 480px;
+    margin: 0 48px 80px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dealContent {
+    background: var(--text, #1a1a18);
+    color: #fff;
+    padding: 56px 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.dealTag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--primary, #1f6c55);
+    margin-bottom: 20px;
+}
+
+.dealTitle {
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    font-weight: 300;
+    line-height: 1.2;
+    margin-bottom: 16px;
+}
+
+.dealTitle span {
+    font-style: italic;
+    color: var(--primary, #1f6c55);
+}
+
+.dealDesc {
+    font-size: 14px;
+    color: rgba(255 255 255 / 0.65);
+    line-height: 1.7;
+    margin-bottom: 32px;
+    max-width: 360px;
+}
+
+.dealBox {
+    background: rgba(255 255 255 / 0.07);
+    border: 1px solid rgba(255 255 255 / 0.15);
+    border-radius: 6px;
+    padding: 20px;
+}
+
+.dealProductMini {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.dealProductMini img {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.dealProductName {
+    font-weight: 500;
+    font-size: 14px;
+    color: #fff;
+}
+
+.dealProductPrice {
+    font-size: 12px;
+    color: rgba(255 255 255 / 0.55);
+}
+
+.dealInputGroup {
+    display: flex;
+    gap: 8px;
+}
+
+.dealInputGroup input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid rgba(255 255 255 / 0.25);
+    border-radius: 4px;
+    background: rgba(255 255 255 / 0.1);
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+}
+
+.dealInputGroup input::placeholder {
+    color: rgba(255 255 255 / 0.4);
+}
+
+.dealImage {
+    background-image: url("https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80");
+    background-size: cover;
+    background-position: center;
+}
+
+/* ── Buttons (shared) ── */
+.btnPrimary {
+    padding: 12px 24px;
+    background: var(--primary, #1f6c55);
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.btnPrimary:hover {
+    background: var(--primary-dark, #165948);
+}
+
+.btnOutline {
+    padding: 12px 24px;
+    background: transparent;
+    color: var(--text, #1a1a18);
+    border: 1px solid var(--text, #1a1a18);
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btnOutline:hover {
+    background: var(--text, #1a1a18);
+    color: #fff;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .productsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .categoryGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .cat1 {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero {
+        grid-template-columns: 1fr;
+        padding: 40px 24px;
+    }
+
+    .heroVisual {
+        display: none;
+    }
+
+    .sectionHeader,
+    .categoryGrid,
+    .productsGrid {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+
+    .dealSection {
+        grid-template-columns: 1fr;
+        margin: 0 24px 48px;
+    }
+
+    .dealImage {
+        min-height: 200px;
+    }
+
+    .productsGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+}

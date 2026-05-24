@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import "./Category.css";
 
 const BASE_URL = "/api/danhMuc";
 const EMPTY_FORM = { tenDanhMuc: "", moTa: "", trangThai: 1 };
@@ -112,11 +113,11 @@ function ListView({ onNavigate }) {
     };
 
     return (
-        <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <div className="cat-wrapper">
+            <div className="cat-page-header">
                 <div>
-                    <h1 style={{ margin: "0 0 6px", fontSize: "1.5rem", fontWeight: 700 }}>Quản lý danh mục</h1>
-                    <p style={{ margin: 0, color: "#6b7280" }}>Tổ chức bộ sưu tập nội thất theo danh mục.</p>
+                    <h1>Quản lý danh mục</h1>
+                    <p>Tổ chức bộ sưu tập nội thất theo danh mục.</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => onNavigate("create")}>
                     + Thêm danh mục
@@ -126,10 +127,10 @@ function ListView({ onNavigate }) {
             {error && <div className="alert alert-danger">{error}</div>}
 
             {loading ? (
-                <div style={{ textAlign: "center", padding: "40px 0", color: "#6b7280" }}>Đang tải...</div>
+                <div className="cat-loading">Đang tải...</div>
             ) : (
-                <div className="table-responsive">
-                    <table className="table table-hover align-middle" style={{ width: "100%" }}>
+                <div className="cat-table-wrap">
+                    <table className="table table-hover align-middle mb-0">
                         <thead className="table-dark">
                             <tr>
                                 <th>Mã danh mục</th>
@@ -140,9 +141,7 @@ function ListView({ onNavigate }) {
                         <tbody>
                             {items.length === 0 ? (
                                 <tr>
-                                    <td colSpan={3} style={{ textAlign: "center", color: "#6b7280", padding: "32px 0" }}>
-                                        Chưa có danh mục
-                                    </td>
+                                    <td colSpan={3} className="cat-empty">Chưa có danh mục</td>
                                 </tr>
                             ) : (
                                 items.map((item) => (
@@ -210,48 +209,46 @@ function CreateView({ onNavigate }) {
     };
 
     return (
-        <div>
-            <div style={{ marginBottom: 24 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+        <div className="cat-wrapper">
+            <div className="cat-sub-header">
+                <div className="cat-sub-header-row">
+                    <h1>Thêm danh mục</h1>
                     <button className="btn btn-outline-secondary btn-sm" onClick={() => onNavigate("list")}>
                         ← Quay lại
                     </button>
-                    <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 700 }}>Thêm danh mục</h1>
                 </div>
-                <p style={{ margin: 0, color: "#6b7280" }}>Tạo nhóm sản phẩm mới để quản lý danh mục bán hàng.</p>
+                <p>Tạo nhóm sản phẩm mới để quản lý danh mục bán hàng.</p>
             </div>
 
-            <div className="card p-4" style={{ maxWidth: 640 }}>
+            <div className="cat-form-card">
                 {errors._global && <div className="alert alert-danger">{errors._global}</div>}
 
                 <form onSubmit={handleSubmit}>
-                    <div style={{ marginBottom: 16 }}>
-                        <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
-                            Tên danh mục <span style={{ color: "#ef4444" }}>*</span>
-                        </label>
-                        <input
-                            type="text" name="tenDanhMuc"
-                            className={`form-control ${errors.tenDanhMuc ? "is-invalid" : ""}`}
-                            placeholder="Nhập tên danh mục"
-                            value={form.tenDanhMuc}
-                            onChange={handleChange}
-                        />
-                        {errors.tenDanhMuc && <div className="invalid-feedback" style={{ display: "block" }}>{errors.tenDanhMuc}</div>}
+                    <div className="cat-form-grid">
+                        <div className="cat-field">
+                            <label>Tên danh mục <span className="req">*</span></label>
+                            <input
+                                type="text" name="tenDanhMuc"
+                                className={`form-control ${errors.tenDanhMuc ? "is-invalid" : ""}`}
+                                placeholder="Nhập tên danh mục"
+                                value={form.tenDanhMuc}
+                                onChange={handleChange}
+                            />
+                            {errors.tenDanhMuc && <div className="invalid-feedback" style={{ display: "block" }}>{errors.tenDanhMuc}</div>}
+                        </div>
+
+                        <div className="cat-field cat-field-full">
+                            <label>Mô tả</label>
+                            <textarea
+                                name="moTa" className="form-control" rows={4}
+                                placeholder="Nhập mô tả danh mục"
+                                value={form.moTa} onChange={handleChange}
+                            />
+                        </div>
                     </div>
 
-                    <div style={{ marginBottom: 20 }}>
-                        <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 4 }}>Mô tả</label>
-                        <textarea
-                            name="moTa" className="form-control" rows={4}
-                            placeholder="Nhập mô tả danh mục"
-                            value={form.moTa} onChange={handleChange}
-                        />
-                    </div>
-
-                    <div style={{ display: "flex", gap: 8 }}>
-                        <button type="button" className="btn btn-outline-secondary" onClick={() => onNavigate("list")}>
-                            Hủy
-                        </button>
+                    <div className="cat-form-actions">
+                        <button type="button" className="btn btn-outline-secondary" onClick={() => onNavigate("list")}>Hủy</button>
                         <button type="submit" className="btn btn-primary" disabled={submitting}>
                             {submitting ? "Đang lưu..." : "+ Thêm mới"}
                         </button>
@@ -325,59 +322,55 @@ function EditView({ selected, onNavigate }) {
         }
     };
 
-    if (loading) return <div style={{ textAlign: "center", padding: "40px 0", color: "#6b7280" }}>Đang tải...</div>;
+    if (loading) return <div className="cat-loading">Đang tải...</div>;
 
     return (
-        <div>
-            <div style={{ marginBottom: 24 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+        <div className="cat-wrapper">
+            <div className="cat-sub-header">
+                <div className="cat-sub-header-row">
+                    <h1>Cập nhật danh mục</h1>
                     <button className="btn btn-outline-secondary btn-sm" onClick={() => onNavigate("list")}>
                         ← Quay lại
                     </button>
-                    <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 700 }}>Cập nhật danh mục</h1>
                 </div>
-                <p style={{ margin: 0, color: "#6b7280" }}>Chỉnh sửa thông tin danh mục sản phẩm.</p>
+                <p>Chỉnh sửa thông tin danh mục sản phẩm.</p>
             </div>
 
-            <div className="card p-4 mb-4" style={{ maxWidth: 640 }}>
+            <div className="cat-form-card">
                 {errors._global && <div className="alert alert-danger">{errors._global}</div>}
 
                 <form onSubmit={handleSubmit}>
-                    <div style={{ marginBottom: 16 }}>
-                        <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 4, color: "#6b7280" }}>
-                            Mã danh mục
-                        </label>
-                        <input type="text" className="form-control" value={form.idDanhMuc || ""} disabled />
+                    <div className="cat-form-grid">
+                        <div className="cat-field">
+                            <label className="muted">Mã danh mục</label>
+                            <input type="text" className="form-control" value={form.idDanhMuc || ""} disabled />
+                        </div>
+
+                        <div className="cat-field">
+                            <label>Tên danh mục <span className="req">*</span></label>
+                            <input
+                                type="text" name="tenDanhMuc"
+                                className={`form-control ${errors.tenDanhMuc ? "is-invalid" : ""}`}
+                                placeholder="Nhập tên danh mục"
+                                value={form.tenDanhMuc || ""}
+                                onChange={handleChange}
+                            />
+                            {errors.tenDanhMuc && <div className="invalid-feedback" style={{ display: "block" }}>{errors.tenDanhMuc}</div>}
+                        </div>
+
+                        <div className="cat-field cat-field-full">
+                            <label>Mô tả</label>
+                            <textarea
+                                name="moTa" className="form-control" rows={4}
+                                placeholder="Nhập mô tả danh mục"
+                                value={form.moTa || ""}
+                                onChange={handleChange}
+                            />
+                        </div>
                     </div>
 
-                    <div style={{ marginBottom: 16 }}>
-                        <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
-                            Tên danh mục <span style={{ color: "#ef4444" }}>*</span>
-                        </label>
-                        <input
-                            type="text" name="tenDanhMuc"
-                            className={`form-control ${errors.tenDanhMuc ? "is-invalid" : ""}`}
-                            placeholder="Nhập tên danh mục"
-                            value={form.tenDanhMuc || ""}
-                            onChange={handleChange}
-                        />
-                        {errors.tenDanhMuc && <div className="invalid-feedback" style={{ display: "block" }}>{errors.tenDanhMuc}</div>}
-                    </div>
-
-                    <div style={{ marginBottom: 20 }}>
-                        <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 4 }}>Mô tả</label>
-                        <textarea
-                            name="moTa" className="form-control" rows={4}
-                            placeholder="Nhập mô tả danh mục"
-                            value={form.moTa || ""}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div style={{ display: "flex", gap: 8 }}>
-                        <button type="button" className="btn btn-outline-secondary" onClick={() => onNavigate("list")}>
-                            Hủy
-                        </button>
+                    <div className="cat-form-actions">
+                        <button type="button" className="btn btn-outline-secondary" onClick={() => onNavigate("list")}>Hủy</button>
                         <button type="submit" className="btn btn-primary" disabled={submitting}>
                             {submitting ? "Đang lưu..." : "💾 Cập nhật"}
                         </button>
@@ -385,12 +378,9 @@ function EditView({ selected, onNavigate }) {
                 </form>
             </div>
 
-            {/* Danger zone */}
-            <div className="card p-4" style={{ maxWidth: 640, border: "1px solid #fca5a5", background: "#fff5f5" }}>
-                <h5 style={{ color: "#dc2626", fontWeight: 700, marginBottom: 6 }}>Xóa danh mục</h5>
-                <p style={{ color: "#374151", marginBottom: 16, fontSize: 14 }}>
-                    Danh mục sẽ được ẩn khỏi khu vực quản lý. Nên kiểm tra sản phẩm liên quan trước khi xóa.
-                </p>
+            <div className="cat-danger-card">
+                <h5>Xóa danh mục</h5>
+                <p>Danh mục sẽ được ẩn khỏi khu vực quản lý. Nên kiểm tra sản phẩm liên quan trước khi xóa.</p>
                 <button className="btn" style={{ background: "#ef4444", color: "#fff" }}
                     onClick={() => setShowDeleteModal(true)}>
                     🗑 Xóa danh mục
@@ -428,7 +418,7 @@ export function Category() {
     };
 
     return (
-        <div className="container-fluid py-4 px-4">
+        <div className="container-fluid p-0">
             {renderView()}
         </div>
     );

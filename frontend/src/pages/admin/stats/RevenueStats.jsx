@@ -10,6 +10,7 @@ import {
 } from "chart.js";
 import { statsService } from "../../../services/admin/stats.service";
 import { currency } from "../../../utils/formatters";
+import styles from "./RevenueStats.module.css";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -23,7 +24,6 @@ export const RevenueStats = () => {
         const year = new Date().getFullYear();
         const data = await statsService.getRevenueByMonth(year);
 
-        // Chuyển đổi data từ API thành format của Chart.js
         const labels = data.map((item) => `Tháng ${item.month}`);
         const values = data.map((item) => item.revenue);
 
@@ -44,23 +44,24 @@ export const RevenueStats = () => {
         console.error("Lỗi:", error);
       }
     };
+
     fetchStats();
   }, []);
 
   return (
-    <div className="admin-content">
-      <h1 className="page-title">Thống kê doanh thu</h1>
+    <div className={styles.adminContent}>
+      <h1 className={styles.pageTitle}>Thống kê doanh thu</h1>
 
-      <div className="admin-stats" style={{ marginBottom: "24px" }}>
-        <div className="stat-card featured">
+      <div className={styles.adminStats}>
+        <div className={styles.statCardFeatured}>
           <label>Tổng doanh thu</label>
           <strong>{currency(totalRevenue)}</strong>
         </div>
       </div>
 
-      <div className="chart-panel">
-        <h2 className="chart-panel-title">Doanh thu theo tháng</h2>
-        <div className="chart-frame" style={{ height: "420px" }}>
+      <div className={styles.chartPanel}>
+        <h2 className={styles.chartPanelTitle}>Doanh thu theo tháng</h2>
+        <div className={styles.chartFrame}>
           <Bar data={chartData} options={{ maintainAspectRatio: false }} />
         </div>
       </div>

@@ -1,0 +1,311 @@
+/* =============================================
+   CustomerOrders.module.css
+   ============================================= */
+
+/* ── Page wrapper ── */
+.wrapper {
+    margin-top: 30px;
+    padding: 0 24px 48px;
+}
+
+.pageTitle {
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text, #333);
+    margin-bottom: 20px;
+}
+
+/* ── Tab bar ── */
+.tabContainer {
+    border-bottom: 1px solid var(--border, #e0e0e0);
+    background: #f9f9f9;
+}
+
+.tabList {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.tabBtn {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: center;
+    min-width: 120px;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.tabBtnActive {
+    composes: tabBtn;
+    border-bottom-color: #000;
+    font-weight: 700;
+    color: #000;
+}
+
+.tabBtnReadOnly {
+    composes: tabBtn;
+    cursor: default;
+}
+
+/* ── List panel ── */
+.listPanel {
+    background: #fff;
+    border-radius: 5px;
+    border: 1px solid var(--border, #e0e0e0);
+    overflow: hidden;
+}
+
+.listBody {
+    padding: 16px 24px;
+}
+
+/* ── Status messages ── */
+.textCenter {
+    text-align: center;
+    padding: 40px 0;
+    color: var(--text-muted, #888);
+    font-size: 14px;
+}
+
+.alertDanger {
+    color: var(--danger, #c0392b);
+    background: rgba(192 57 43 / 0.08);
+    border: 1px solid rgba(192 57 43 / 0.2);
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+/* ── Order card ── */
+.orderCard {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    background: #fff8f3;
+    border: 1px solid #f0e0d0;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    transition: box-shadow 0.2s;
+}
+
+.orderCardClickable {
+    composes: orderCard;
+    cursor: pointer;
+}
+
+.orderCardClickable:hover {
+    box-shadow: 0 2px 12px rgba(0 0 0 / 0.08);
+}
+
+.orderImg {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border: 1px solid #ddd;
+    padding: 4px;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.orderInfo {
+    flex: 1;
+    min-width: 160px;
+}
+
+.orderName {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.orderMeta {
+    font-size: 13px;
+    color: #777;
+}
+
+.orderDate {
+    font-size: 13px;
+    color: #999;
+    margin-top: 2px;
+}
+
+.statusBadge {
+    padding: 5px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* ── Detail view ── */
+.detailCard {
+    max-width: 800px;
+    margin: 24px auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0 0 0 / 0.08);
+}
+
+.detailHeader {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.detailOrderId {
+    color: #e91e63;
+}
+
+.detailMeta {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.detailAddress {
+    flex: 1;
+    min-width: 200px;
+}
+
+.detailAddressLabel {
+    color: #666;
+    margin: 0 0 4px;
+    font-size: 14px;
+}
+
+.detailCustomerName {
+    font-weight: 700;
+    margin: 0 0 4px;
+}
+
+.detailCustomerPhone {
+    font-weight: 400;
+    color: #666;
+    margin-left: 10px;
+}
+
+.detailCustomerAddr {
+    color: #666;
+    margin: 0;
+    font-size: 14px;
+}
+
+.detailTime strong {
+    display: block;
+    font-weight: 700;
+    color: #333;
+}
+
+.detailTime span {
+    display: block;
+    color: #666;
+    font-size: 14px;
+}
+
+.detailItemsTitle {
+    font-size: 16px;
+    font-weight: 700;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.detailItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.detailItemImg {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.detailItemInfo {
+    flex: 1;
+}
+
+.detailItemName {
+    margin: 0 0 4px;
+    font-weight: 500;
+}
+
+.detailItemQty {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.detailItemPrice {
+    font-weight: 700;
+    color: #e91e63;
+}
+
+.detailTotal {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid #ddd;
+    margin-top: 8px;
+    font-size: 16px;
+}
+
+.detailTotalValue {
+    font-weight: 700;
+    color: #e91e63;
+}
+
+.detailBack {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.btnBack {
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid #999;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btnBack:hover {
+    background: #f0f0f0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+    .tabBtn {
+        min-width: 80px;
+        font-size: 12px;
+        padding: 10px 8px;
+    }
+
+    .detailCard {
+        padding: 16px;
+        margin: 16px;
+    }
+}

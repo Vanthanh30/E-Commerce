@@ -1,0 +1,97 @@
+/* ============================================================
+   AdminProductList – Quản lý Sản Phẩm
+   ============================================================ */
+
+.pl-wrapper {
+    padding: 2rem 2.5rem;
+}
+
+.pl-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.pl-page-header h1 {
+    margin: 0 0 0.375rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.pl-page-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+.pl-sub-header {
+    margin-bottom: 1.5rem;
+}
+
+.pl-sub-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.375rem;
+}
+
+.pl-sub-header-row h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.pl-sub-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+.pl-form-card {
+    width: 100%;
+}
+
+.pl-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 2rem;
+}
+
+.pl-field-full {
+    grid-column: 1 / -1;
+}
+
+.pl-field {
+    margin-bottom: 1rem;
+}
+
+.pl-field label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.pl-field label .req {
+    color: #ef4444;
+}
+
+.pl-form-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #f3f4f6;
+}
+
+.pl-table-wrap {
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.pl-loading,
+.pl-empty {
+    text-align: center;
+    padding: 2.5rem 0;
+    color: #9ca3af;
+}

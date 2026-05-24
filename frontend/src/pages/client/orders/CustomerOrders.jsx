@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import styles from "./CustomerOrders.module.css";
 
 // ==================== API HELPERS ====================
 const BASE_URL = "/api/donHang/khachHang";
@@ -24,7 +25,32 @@ const TABS = [
   { key: "cancelled", label: "Đã hủy" },
 ];
 
-// ==================== CHI TIET DON HANG KH ====================
+// ==================== TAB BAR ====================
+function TabBar({ activeTab, onChangeTab, readOnly = false }) {
+  return (
+    <div className={styles.tabContainer}>
+      <div className={styles.tabList}>
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => !readOnly && onChangeTab(tab.key)}
+            className={
+              activeTab === tab.key
+                ? styles.tabBtnActive
+                : readOnly
+                  ? styles.tabBtnReadOnly
+                  : styles.tabBtn
+            }
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ==================== CHI TIET DON HANG ── ====================
 function ChiTietView({ idDH, activeTab, onBack }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +61,6 @@ function ChiTietView({ idDH, activeTab, onBack }) {
       try {
         // const result = await apiGetChiTiet(idDH);
         // setData(result);
-        // Dữ liệu mẫu — xóa khi kết nối API thật
         setData({
           idDH,
           tenKhachHang: "Nguyễn Văn A",
@@ -55,58 +80,53 @@ function ChiTietView({ idDH, activeTab, onBack }) {
 
   const tongTien = data?.items?.reduce((s, i) => s + (i.sl ?? 0) * (i.gia ?? 0), 0) ?? 0;
 
-  if (loading) return <div className="text-center py-5 text-muted">Đang tải...</div>;
-  if (error) return <div className="alert alert-danger">{error}</div>;
+  if (loading) return <div className={styles.textCenter}>Đang tải...</div>;
+  if (error) return <div className={styles.alertDanger}>{error}</div>;
 
   return (
     <div>
-      {/* Tabs (vẫn hiển thị khi xem chi tiết) */}
       <TabBar activeTab={activeTab} onChangeTab={onBack} readOnly />
 
-      <div style={{ maxWidth: 800, margin: "24px auto", background: "#fff", border: "1px solid #ddd", borderRadius: 8, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+      <div className={styles.detailCard}>
         {/* Mã đơn */}
-        <div style={{ borderBottom: "1px solid #ddd", paddingBottom: 12, marginBottom: 20 }}>
-          <span style={{ fontSize: 16, fontWeight: 700 }}>
-            Mã đơn hàng: <span style={{ color: "#e91e63" }}>{data.idDH}</span>
-          </span>
+        <div className={styles.detailHeader}>
+          Mã đơn hàng: <span className={styles.detailOrderId}>{data.idDH}</span>
         </div>
 
         {/* Địa chỉ + thời gian */}
-        <div style={{ display: "flex", gap: 24, marginBottom: 20, flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <p style={{ color: "#666", margin: "0 0 4px", fontSize: 14 }}>Địa chỉ nhận hàng</p>
-            <p style={{ fontWeight: 700, margin: "0 0 4px" }}>
+        <div className={styles.detailMeta}>
+          <div className={styles.detailAddress}>
+            <p className={styles.detailAddressLabel}>Địa chỉ nhận hàng</p>
+            <p className={styles.detailCustomerName}>
               {data.tenKhachHang}
-              <span style={{ fontWeight: 400, color: "#666", marginLeft: 10 }}>{data.sdt}</span>
+              <span className={styles.detailCustomerPhone}>{data.sdt}</span>
             </p>
-            <p style={{ color: "#666", margin: 0, fontSize: 14 }}>{data.diaChi}</p>
+            <p className={styles.detailCustomerAddr}>{data.diaChi}</p>
           </div>
-          <div>
-            <span style={{ display: "block", fontWeight: 700, color: "#333" }}>Thời gian đặt</span>
-            <span style={{ display: "block", color: "#666", fontSize: 14 }}>{data.thoiGian}</span>
+          <div className={styles.detailTime}>
+            <strong>Thời gian đặt</strong>
+            <span>{data.thoiGian}</span>
           </div>
         </div>
 
         {/* Sản phẩm */}
-        <h3 style={{ fontSize: 16, fontWeight: 700, borderBottom: "1px solid #ddd", paddingBottom: 8, marginBottom: 12 }}>
-          Các sản phẩm
-        </h3>
+        <h3 className={styles.detailItemsTitle}>Các sản phẩm</h3>
 
         {data.items.length === 0 ? (
-          <div className="text-center text-muted py-3">Không có sản phẩm</div>
+          <div className={styles.textCenter}>Không có sản phẩm</div>
         ) : (
           data.items.map((item) => (
-            <div key={item.idsp} style={{ display: "flex", alignItems: "center", gap: 16, padding: "10px 0", borderBottom: "1px solid #eee" }}>
+            <div key={item.idsp} className={styles.detailItem}>
               <img
                 src={item.hinh || "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=150"}
                 alt={item.tensp}
-                style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 6, border: "1px solid #ddd" }}
+                className={styles.detailItemImg}
               />
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 4px", fontWeight: 500 }}>{item.tensp}</p>
-                <p style={{ margin: 0, color: "#666", fontSize: 14 }}>Số lượng: {item.sl}</p>
+              <div className={styles.detailItemInfo}>
+                <p className={styles.detailItemName}>{item.tensp}</p>
+                <p className={styles.detailItemQty}>Số lượng: {item.sl}</p>
               </div>
-              <div style={{ fontWeight: 700, color: "#e91e63" }}>
+              <div className={styles.detailItemPrice}>
                 {(item.gia ?? 0).toLocaleString("vi-VN")} đ
               </div>
             </div>
@@ -114,57 +134,25 @@ function ChiTietView({ idDH, activeTab, onBack }) {
         )}
 
         {/* Tổng tiền */}
-        <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 16, borderTop: "1px solid #ddd", marginTop: 8 }}>
-          <span style={{ fontSize: 16 }}>Tổng tiền hàng</span>
-          <span style={{ fontWeight: 700, color: "#e91e63", fontSize: 16 }}>
+        <div className={styles.detailTotal}>
+          <span>Tổng tiền hàng</span>
+          <span className={styles.detailTotalValue}>
             {tongTien.toLocaleString("vi-VN")} đ
           </span>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>
-          <button className="btn btn-outline-secondary" onClick={onBack}>← Quay lại</button>
+        <div className={styles.detailBack}>
+          <button className={styles.btnBack} onClick={onBack}>← Quay lại</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ==================== TAB BAR ====================
-function TabBar({ activeTab, onChangeTab, readOnly = false }) {
-  return (
-    <div style={{ borderBottom: "1px solid #e0e0e0", background: "#f9f9f9" }}>
-      <div style={{ display: "flex", flexWrap: "wrap" }}>
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => !readOnly && onChangeTab(tab.key)}
-            style={{
-              flex: 1,
-              padding: "12px 16px",
-              border: "none",
-              borderBottom: activeTab === tab.key ? "2px solid #000" : "2px solid transparent",
-              background: "transparent",
-              fontWeight: activeTab === tab.key ? 700 : 500,
-              color: activeTab === tab.key ? "#000" : "#333",
-              cursor: readOnly ? "default" : "pointer",
-              fontSize: 14,
-              textAlign: "center",
-              minWidth: 120,
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ==================== ORDER CARD (CLIENT) ====================
+// ==================== ORDER CARD ====================
 function ClientOrderCard({ item, tab, onViewDetail }) {
   const img = item.hinh || "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=150";
   const tongTien = ((item.sl ?? 0) * (item.gia ?? 0)).toLocaleString("vi-VN");
-
   const hinhThucTT = item.hinhthuctt === 0 ? "Thanh toán khi nhận hàng" : "Thanh toán online";
 
   const statusMap = {
@@ -179,30 +167,26 @@ function ClientOrderCard({ item, tab, onViewDetail }) {
 
   return (
     <div
-      className="card mb-3"
-      style={{
-        display: "flex", alignItems: "center", gap: 16,
-        padding: "14px 18px", cursor: clickable ? "pointer" : "default",
-        background: "#fff8f3", border: "1px solid #f0e0d0", flexWrap: "wrap",
-      }}
+      className={clickable ? styles.orderCardClickable : styles.orderCard}
       onClick={clickable ? () => onViewDetail(item.idDH) : undefined}
     >
       <img
         src={img}
         alt={item.tensp}
         onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=150"; }}
-        style={{ width: 64, height: 64, objectFit: "cover", border: "1px solid #ddd", padding: 4, background: "#fff", flexShrink: 0 }}
+        className={styles.orderImg}
       />
-      <div style={{ flex: 1, minWidth: 160 }}>
-        <div style={{ fontWeight: 500, color: "#333", marginBottom: 4 }}>{item.tensp}</div>
+      <div className={styles.orderInfo}>
+        <div className={styles.orderName}>{item.tensp}</div>
         {tab !== "cancelled" && (
-          <div style={{ fontSize: 13, color: "#777" }}>
-            Thành tiền: {tongTien} VNĐ
-          </div>
+          <div className={styles.orderMeta}>Thành tiền: {tongTien} VNĐ</div>
         )}
-        {item.ngayBan && <div style={{ fontSize: 13, color: "#999" }}>{item.ngayBan}</div>}
+        {item.ngayBan && <div className={styles.orderDate}>{item.ngayBan}</div>}
       </div>
-      <span style={{ padding: "5px 14px", borderRadius: 4, fontSize: 13, fontWeight: 500, background: statusMap.bg, color: statusMap.color }}>
+      <span
+        className={styles.statusBadge}
+        style={{ background: statusMap.bg, color: statusMap.color }}
+      >
         {statusMap.text}
       </span>
     </div>
@@ -222,7 +206,7 @@ function ListView({ onViewDetail }) {
     try {
       // const data = await apiGetByTab(tab);
       // setItems(data);
-      setItems([]); // Xóa dòng này khi kết nối API thật
+      setItems([]);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -234,20 +218,18 @@ function ListView({ onViewDetail }) {
 
   return (
     <div>
-      <h1 style={{ textAlign: "center", fontSize: 24, fontWeight: 700, color: "#333", marginBottom: 20 }}>
-        Đơn hàng của tôi
-      </h1>
+      <h1 className={styles.pageTitle}>Đơn hàng của tôi</h1>
 
-      <div style={{ background: "#fff", borderRadius: 5, border: "1px solid #e0e0e0", overflow: "hidden" }}>
+      <div className={styles.listPanel}>
         <TabBar activeTab={activeTab} onChangeTab={setActiveTab} />
 
-        <div style={{ padding: "16px 24px" }}>
-          {error && <div className="alert alert-danger">{error}</div>}
+        <div className={styles.listBody}>
+          {error && <div className={styles.alertDanger}>{error}</div>}
 
           {loading ? (
-            <div className="text-center py-5 text-muted">Đang tải...</div>
+            <div className={styles.textCenter}>Đang tải...</div>
           ) : items.length === 0 ? (
-            <div className="text-center py-5 text-muted">Chưa có đơn hàng nào ở trạng thái này.</div>
+            <div className={styles.textCenter}>Chưa có đơn hàng nào ở trạng thái này.</div>
           ) : (
             items.map((item) => (
               <ClientOrderCard
@@ -264,11 +246,11 @@ function ListView({ onViewDetail }) {
   );
 }
 
-// ==================== MAIN COMPONENT ====================
+// ==================== MAIN ====================
 export function CustomerOrders() {
   const [view, setView] = useState("list");
   const [selectedId, setSelectedId] = useState(null);
-  const [activeTab, setActiveTab] = useState("pending");
+  const [activeTab] = useState("pending");
 
   const handleViewDetail = (idDH) => {
     setSelectedId(idDH);
@@ -281,7 +263,7 @@ export function CustomerOrders() {
   };
 
   return (
-    <div style={{ marginTop: 30 }}>
+    <div className={styles.wrapper}>
       {view === "detail" ? (
         <ChiTietView idDH={selectedId} activeTab={activeTab} onBack={handleBack} />
       ) : (

@@ -1,0 +1,100 @@
+/* =============================================
+   RevenueStats.module.css
+   Styles riêng cho trang thống kê doanh thu
+   ============================================= */
+
+/* ── Wrapper nội dung admin ── */
+.adminContent {
+    padding: 32px;
+}
+
+/* ── Tiêu đề trang ── */
+.pageTitle {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 24px;
+    color: var(--text, #1a1a18);
+    letter-spacing: -0.01em;
+}
+
+/* ── Grid stat cards ── */
+.adminStats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+/* ── Stat card ── */
+.statCard {
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e0ddd8);
+    border-radius: 8px;
+    padding: 20px 24px;
+    min-width: 180px;
+}
+
+.statCard label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted, #888);
+    margin-bottom: 8px;
+}
+
+.statCard strong {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--text, #1a1a18);
+    line-height: 1.1;
+}
+
+/* Variant nổi bật */
+.statCardFeatured {
+    composes: statCard;
+    border-color: var(--primary, #1f6c55);
+    background: rgba(31 108 85 / 0.04);
+}
+
+.statCardFeatured strong {
+    color: var(--primary, #1f6c55);
+}
+
+/* ── Chart panel ── */
+.chartPanel {
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e0ddd8);
+    border-radius: 8px;
+    padding: 28px;
+}
+
+.chartPanelTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text, #1a1a18);
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+}
+
+.chartFrame {
+    height: 420px;
+    position: relative;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .adminContent {
+        padding: 20px 16px;
+    }
+
+    .chartFrame {
+        height: 280px;
+    }
+
+    .statCard strong {
+        font-size: 1.3rem;
+    }
+}

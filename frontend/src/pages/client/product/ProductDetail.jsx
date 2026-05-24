@@ -4,15 +4,14 @@ import { productService } from "../../../services/product.service";
 import { cartService } from "../../../services/client/cart.service";
 import { useAuth } from "../../../context/AuthContext";
 import { assetUrl, currency } from "../../../utils/formatters";
+import styles from "./ProductDetail.module.css";
 
 const mockProduct = {
   productId: "1",
   name: "Atelier Signature Sofa",
   fixedPrice: 45000000,
-  description:
-    "Thiết kế tinh tế kết hợp chất liệu cao cấp, tạo điểm nhấn cho phòng khách hiện đại.",
-  imageUrl:
-    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80",
+  description: "Thiết kế tinh tế kết hợp chất liệu cao cấp, tạo điểm nhấn cho phòng khách hiện đại.",
+  imageUrl: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80",
   stock: 3,
 };
 
@@ -52,7 +51,6 @@ export const ProductDetail = () => {
         setLoading(false);
       }
     };
-
     fetchProductDetail();
   }, [id]);
 
@@ -76,138 +74,91 @@ export const ProductDetail = () => {
       navigate("/login");
       return;
     }
-
     try {
-      await cartService.addToCart({
-        customerId: user.customerId,
-        productId: product.productId,
-        quantity: 1,
-      });
+      await cartService.addToCart({ customerId: user.customerId, productId: product.productId, quantity: 1 });
       alert("Đã thêm sản phẩm vào giỏ hàng thành công!");
     } catch (error) {
       alert(error.message || "Không thể thêm sản phẩm vào giỏ hàng.");
     }
   };
 
-  if (loading) {
-    return <div className="page-container">Đang tải bộ sưu tập...</div>;
-  }
-
-  if (!product) {
-    return (
-      <div className="page-container">
-        Không tìm thấy món đồ nội thất yêu cầu.
-      </div>
-    );
-  }
+  if (loading) return <div className={styles.stateMessage}>Đang tải bộ sưu tập...</div>;
+  if (!product) return <div className={styles.stateMessage}>Không tìm thấy món đồ nội thất yêu cầu.</div>;
 
   return (
-    <div className="page-container">
-      <div className="breadcrumb">
-        <Link to="/">Trang chủ</Link> &gt; <Link to="/">Phòng khách</Link> &gt;{" "}
-        {product.name}
+    <div className={styles.pageContainer}>
+      <div className={styles.breadcrumb}>
+        <Link to="/">Trang chủ</Link> &gt; <Link to="/">Phòng khách</Link> &gt; {product.name}
       </div>
 
-      <div className="product-layout">
+      <div className={styles.productLayout}>
+        {/* ── Gallery ── */}
         <div>
-          <div className="product-gallery-main">
+          <div className={styles.galleryMain}>
             <img src={mainImage} alt={product.name} />
           </div>
-          <div className="product-gallery-thumbs">
+          <div className={styles.galleryThumbs}>
             {thumbnails.map((thumbUrl) => (
               <img
                 key={thumbUrl}
                 src={thumbUrl}
                 alt=""
-                className={mainImage === thumbUrl ? "active" : ""}
+                className={mainImage === thumbUrl ? styles.active : ""}
                 onClick={() => setMainImage(thumbUrl)}
               />
             ))}
           </div>
         </div>
 
+        {/* ── Info ── */}
         <div>
-          <div className="product-badges">
-            <span className="badge badge-gold">Phiên bản giới hạn</span>
-            <span className="badge badge-stock">
-              {product.stock > 0
-                ? `Còn ${product.stock} sản phẩm`
-                : "Hết hàng"}
+          <div className={styles.productBadges}>
+            <span className={styles.badgeGold}>Phiên bản giới hạn</span>
+            <span className={styles.badgeStock}>
+              {product.stock > 0 ? `Còn ${product.stock} sản phẩm` : "Hết hàng"}
             </span>
           </div>
-          <h1 className="page-title">{product.name}</h1>
-          <p className="page-subtitle">Thiết kế bởi Studio Editorial</p>
 
-          <div className="price-box">
-            <div className="price-label">Giá cố định</div>
-            <div className="price-value">
+          <h1 className={styles.pageTitle}>{product.name}</h1>
+          <p className={styles.pageSubtitle}>Thiết kế bởi Studio Editorial</p>
+
+          <div className={styles.priceBox}>
+            <div className={styles.priceLabel}>Giá cố định</div>
+            <div className={styles.priceValue}>
               {product.fixedPrice ? currency(product.fixedPrice) : "Liên hệ"}
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleBuyNow}
-            className="btn btn-primary btn-block"
-            style={{ marginBottom: "12px" }}
-          >
-            <i className="material-icons" style={{ fontSize: "18px" }}>
-              shopping_bag
-            </i>{" "}
+          <button type="button" onClick={handleBuyNow} className={styles.btnPrimary}>
+            <i className="material-icons" style={{ fontSize: "18px" }}>shopping_bag</i>
             Mua ngay
           </button>
 
-          <div className="negotiate-box">
+          <div className={styles.negotiateBox}>
             <strong>Đề xuất giá</strong>
-            <p
-              style={{
-                fontSize: "13px",
-                color: "var(--text-muted)",
-                margin: "8px 0 12px",
-              }}
-            >
-              Đưa ra mức giá bạn mong muốn - hệ thống sẽ phản hồi qua quy trình
-              thương lượng.
+            <p className={styles.negotiateDesc}>
+              Đưa ra mức giá bạn mong muốn - hệ thống sẽ phản hồi qua quy trình thương lượng.
             </p>
-            <Link
-              to={`/negotiate/${product.productId}`}
-              className="btn btn-outline btn-block"
-            >
+            <Link to={`/negotiate/${product.productId}`} className={styles.btnOutline}>
               Đề xuất giá mới
             </Link>
           </div>
 
-          <div className="specs-grid">
-            <div className="spec-item">
+          <div className={styles.specsGrid}>
+            <div className={styles.specItem}>
               <label>Chất liệu</label> Nhung Ý & gỗ sồi tự nhiên
             </div>
-            <div className="spec-item">
+            <div className={styles.specItem}>
               <label>Kích thước</label> 240x100x85 cm
             </div>
           </div>
 
-          <div style={{ marginTop: "24px" }}>
-            <h3
-              style={{
-                fontSize: "14px",
-                textTransform: "uppercase",
-                marginBottom: "8px",
-              }}
-            >
-              Mô tả sản phẩm
-            </h3>
-            <p style={{ color: "var(--text-muted)", fontSize: "14px" }}>
-              {product.description ||
-                "Sản phẩm tuyển chọn từ bộ sưu tập Atelier Accord."}
-            </p>
-          </div>
+          <h3 className={styles.descTitle}>Mô tả sản phẩm</h3>
+          <p className={styles.descText}>
+            {product.description || "Sản phẩm tuyển chọn từ bộ sưu tập Atelier Accord."}
+          </p>
 
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            className="btn btn-ghost btn-block"
-            style={{ marginTop: "16px" }}
-          >
+          <button type="button" onClick={handleAddToCart} className={styles.btnGhost}>
             Thêm vào giỏ hàng
           </button>
         </div>

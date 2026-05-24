@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { authService } from "../../../services/client/auth.service";
+import styles from "./Login.module.css";
 
 const IconUser = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -21,7 +22,9 @@ const IconEye = ({ open }) => open ? (
   </svg>
 ) : (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" />
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+    <line x1="1" y1="1" x2="23" y2="23" />
   </svg>
 );
 
@@ -46,179 +49,128 @@ export const Login = () => {
     setError("");
 
     try {
-      const response = await authService.login({
-        username,
-        password,
-        rememberDevice,
-      });
+      const response = await authService.login({ username, password, rememberDevice });
       loginGlobal(response.user, response.role);
       navigate(response.role === "admin" ? "/admin/products" : "/");
     } catch (err) {
-      setError(
-        err.message || "Tên đăng nhập hoặc mật khẩu không chính xác.",
-      );
+      setError(err.message || "Tên đăng nhập hoặc mật khẩu không chính xác.");
     }
   };
 
   return (
-    <div className="auth-layout">
-      <div className="auth-brand">
+    <div className={styles.authLayout}>
+      {/* ── Cột trái: Brand ── */}
+      <div className={styles.authBrand}>
         <div
-          className="auth-brand-bg"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80')",
-          }}
-        ></div>
-        <div className="auth-brand-content">
-          <span className="auth-badge">THÀNH LẬP 2024</span>
+          className={styles.authBrandBg}
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80')" }}
+        />
+        <div className={styles.authBrandContent}>
+          <span className={styles.authBadge}>THÀNH LẬP 2024</span>
           <h1>The Editorial Atelier</h1>
           <p>
             Một cuộc đối thoại chọn lọc giữa không gian và vật thể. Đăng nhập để
             quản lý bộ sưu tập và điều phối câu chuyện nội thất của bạn.
           </p>
         </div>
-        <div className="auth-stats">
-          <div className="auth-stat">
+        <div className={styles.authStats}>
+          <div className={styles.authStat}>
             <strong>4.9</strong>
             <span>Sự hài lòng khách hàng</span>
           </div>
-          <div className="auth-stat">
+          <div className={styles.authStat}>
             <strong>12k+</strong>
             <span>Tác phẩm tuyển chọn</span>
           </div>
         </div>
       </div>
 
-      <div className="auth-panel">
+      {/* ── Cột phải: Form ── */}
+      <div className={styles.authPanel}>
         <h2>Chào mừng trở lại</h2>
-        <p className="lead">
+        <p className={styles.lead}>
           Vui lòng nhập thông tin đăng nhập để truy cập không gian làm việc.
         </p>
 
-        {error && (
-          <div
-            style={{
-              color: "var(--danger)",
-              marginBottom: "16px",
-              fontSize: "14px",
-            }}
-          >
-            {error}
-          </div>
-        )}
+        {error && <div className={styles.errorBanner}>{error}</div>}
 
         <form onSubmit={handleLogin}>
-          <div className="form-group">
+          {/* Username */}
+          <div className={styles.formGroup}>
             <label htmlFor="username">Tên đăng nhập</label>
-            <div className="input-with-icon">
-              <span className="icon-prefix" style={{ display: "flex", alignItems: "center", color: "var(--text-muted, #888)" }}>
-                <IconUser />
-              </span>
+            <div className={styles.inputWithIcon}>
+              <span className={styles.iconPrefix}><IconUser /></span>
               <input
                 type="text"
                 id="username"
                 name="username"
-                className="form-control"
+                className={styles.formControl}
                 placeholder="admin@atelieraccord.com"
                 value={username}
-                onChange={(event) => setUsername(event.target.value)}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>
           </div>
 
-          <div className="form-group">
+          {/* Password */}
+          <div className={styles.formGroup}>
             <label htmlFor="password">
-              Mật khẩu{" "}
-              <a
-                href="#"
-                style={{
-                  float: "right",
-                  fontSize: "11px",
-                  color: "var(--primary)",
-                }}
-              >
-                Quên mật khẩu?
-              </a>
+              Mật khẩu
+              <a href="#" className={styles.forgotLink}>Quên mật khẩu?</a>
             </label>
-            <div className="input-with-icon">
-              <span className="icon-prefix" style={{ display: "flex", alignItems: "center", color: "var(--text-muted, #888)" }}>
-                <IconLock />
-              </span>
+            <div className={styles.inputWithIcon}>
+              <span className={styles.iconPrefix}><IconLock /></span>
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
-                className="form-control"
+                className={styles.formControl}
                 placeholder="••••••••"
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <button
                 type="button"
-                className="toggle-password"
+                className={styles.togglePassword}
                 aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                onClick={() => setShowPassword((value) => !value)}
-                style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+                onClick={() => setShowPassword((v) => !v)}
               >
                 <IconEye open={showPassword} />
               </button>
             </div>
           </div>
 
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              fontSize: "13px",
-              marginBottom: "20px",
-            }}
-          >
+          {/* Remember device */}
+          <label className={styles.rememberLabel}>
             <input
               type="checkbox"
               checked={rememberDevice}
-              onChange={(event) => setRememberDevice(event.target.checked)}
-              style={{ width: "auto" }}
-            />{" "}
+              onChange={(e) => setRememberDevice(e.target.checked)}
+            />
             Ghi nhớ thiết bị này
           </label>
 
-          <button type="submit" className="btn btn-primary btn-block" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+          <button type="submit" className={styles.btnPrimary}>
             Đăng nhập
             <IconArrow />
           </button>
         </form>
 
-        <div className="auth-divider">Hoặc truy cập đối tác</div>
-        <div className="auth-social">
-          <button type="button" className="btn btn-ghost">
-            Google
-          </button>
-          <button type="button" className="btn btn-ghost">
-            SSO
-          </button>
+        <div className={styles.authDivider}>Hoặc truy cập đối tác</div>
+
+        <div className={styles.authSocial}>
+          <button type="button" className={styles.btnGhost}>Google</button>
+          <button type="button" className={styles.btnGhost}>SSO</button>
         </div>
 
-        <p
-          style={{
-            marginTop: "24px",
-            fontSize: "14px",
-            color: "var(--text-muted)",
-          }}
-        >
+        <p className={styles.registerLink}>
           Chưa có tài khoản?{" "}
-          <Link
-            to="/register"
-            style={{ color: "var(--primary)", fontWeight: 600 }}
-          >
-            Đăng ký truy cập
-          </Link>
+          <Link to="/register">Đăng ký truy cập</Link>
         </p>
 
-        <div className="auth-footer-links">
+        <div className={styles.authFooterLinks}>
           <span>ATELIER ACCORD © {new Date().getFullYear()}</span>
           <a href="#">Quyền riêng tư</a>
           <a href="#">Pháp lý</a>

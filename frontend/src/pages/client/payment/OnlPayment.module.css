@@ -1,0 +1,117 @@
+/* =============================================
+   OnlPayment.module.css
+   ============================================= */
+
+.pageWrapper {
+    min-height: 100vh;
+    background: #FFF4D0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+    padding: 16px;
+}
+
+.card {
+    max-width: 500px;
+    width: 100%;
+    background: #FFE09F;
+    border-radius: 10px;
+    padding: 28px;
+    box-shadow: 0 4px 16px rgba(0 0 0 / 0.12);
+    text-align: center;
+}
+
+.title {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.15rem;
+    line-height: 1.4;
+}
+
+/* ── Info rows ── */
+.infoList {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.infoRow {
+    margin: 10px 0;
+    font-size: 16px;
+    color: #555;
+}
+
+.infoRow strong {
+    color: #333;
+}
+
+/* ── QR image ── */
+.qrWrapper {
+    margin: 20px 0;
+}
+
+.qrImg {
+    max-width: 100%;
+    border-radius: 8px;
+}
+
+/* ── Buttons ── */
+.btnGroup {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btnBack {
+    flex: 1;
+    min-width: 160px;
+    padding: 12px 16px;
+    border-radius: 5px;
+    border: none;
+    background: #f5a623;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btnBack:hover {
+    background: #d4901c;
+}
+
+.btnConfirm {
+    flex: 1;
+    min-width: 160px;
+    padding: 12px 16px;
+    border-radius: 5px;
+    border: none;
+    background: #34c759;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btnConfirm:hover {
+    background: #28a745;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .card {
+        padding: 20px 16px;
+    }
+
+    .btnGroup {
+        flex-direction: column;
+    }
+
+    .btnBack,
+    .btnConfirm {
+        min-width: unset;
+        width: 100%;
+    }
+}

@@ -1,0 +1,334 @@
+/* =============================================
+   Login.module.css
+   Styles riêng cho trang đăng nhập
+   ============================================= */
+
+/* Layout chính: 2 cột (brand | panel) */
+.authLayout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ── Cột trái: Brand / ảnh nền ── */
+.authBrand {
+    position: relative;
+    flex: 1 1 48%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 48px;
+    color: #fff;
+    overflow: hidden;
+}
+
+.authBrandBg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.55);
+    z-index: 0;
+}
+
+.authBrandContent {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 32px;
+}
+
+.authBadge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: 1px solid rgba(255 255 255 / 0.5);
+    border-radius: 2px;
+    padding: 4px 10px;
+    margin-bottom: 16px;
+}
+
+.authBrandContent h1 {
+    font-size: clamp(1.8rem, 3vw, 2.8rem);
+    font-weight: 300;
+    line-height: 1.2;
+    margin-bottom: 16px;
+}
+
+.authBrandContent p {
+    font-size: 14px;
+    line-height: 1.7;
+    opacity: 0.85;
+    max-width: 380px;
+}
+
+.authStats {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 40px;
+}
+
+.authStat strong {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.authStat span {
+    font-size: 12px;
+    opacity: 0.7;
+    letter-spacing: 0.05em;
+}
+
+/* ── Cột phải: Form panel ── */
+.authPanel {
+    flex: 0 0 440px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 56px 48px;
+    background: var(--bg, #fafaf8);
+    overflow-y: auto;
+}
+
+.authPanel h2 {
+    font-size: 1.6rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.lead {
+    font-size: 14px;
+    color: var(--text-muted, #888);
+    margin-bottom: 32px;
+    line-height: 1.6;
+}
+
+/* ── Error banner ── */
+.errorBanner {
+    color: var(--danger, #c0392b);
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+/* ── Form groups ── */
+.formGroup {
+    margin-bottom: 20px;
+}
+
+.formGroup label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted, #888);
+    margin-bottom: 8px;
+}
+
+.forgotLink {
+    float: right;
+    font-size: 11px;
+    color: var(--primary, #1f6c55);
+    text-decoration: none;
+}
+
+.forgotLink:hover {
+    text-decoration: underline;
+}
+
+/* Input wrapper với icon */
+.inputWithIcon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.iconPrefix {
+    position: absolute;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    color: var(--text-muted, #888);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.formControl {
+    width: 100%;
+    padding: 10px 40px 10px 40px;
+    border: 1px solid var(--border, #e0ddd8);
+    border-radius: 4px;
+    font-size: 14px;
+    background: var(--bg-input, #fff);
+    color: var(--text, #1a1a18);
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+.formControl:focus {
+    border-color: var(--primary, #1f6c55);
+}
+
+.formControlNoIcon {
+    composes: formControl;
+    padding-left: 12px;
+}
+
+/* Toggle password button */
+.togglePassword {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted, #888);
+    padding: 4px;
+}
+
+.togglePassword:hover {
+    color: var(--text, #1a1a18);
+}
+
+/* Remember me */
+.rememberLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+.rememberLabel input {
+    width: auto;
+}
+
+/* Submit button */
+.btnPrimary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 24px;
+    background: var(--primary, #1f6c55);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.btnPrimary:hover {
+    background: var(--primary-dark, #165948);
+    transform: translateY(-1px);
+}
+
+/* Divider */
+.authDivider {
+    position: relative;
+    text-align: center;
+    margin: 28px 0;
+    font-size: 12px;
+    color: var(--text-muted, #888);
+    letter-spacing: 0.05em;
+}
+
+.authDivider::before,
+.authDivider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: calc(50% - 70px);
+    height: 1px;
+    background: var(--border, #e0ddd8);
+}
+
+.authDivider::before {
+    left: 0;
+}
+
+.authDivider::after {
+    right: 0;
+}
+
+/* Social buttons */
+.authSocial {
+    display: flex;
+    gap: 12px;
+}
+
+.btnGhost {
+    flex: 1;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid var(--border, #e0ddd8);
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.btnGhost:hover {
+    background: var(--bg-hover, #f0ede8);
+    border-color: var(--text-muted, #888);
+}
+
+/* Footer links */
+.registerLink {
+    margin-top: 24px;
+    font-size: 14px;
+    color: var(--text-muted, #888);
+}
+
+.registerLink a {
+    color: var(--primary, #1f6c55);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.authFooterLinks {
+    margin-top: 32px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 11px;
+    color: var(--text-muted, #888);
+    letter-spacing: 0.05em;
+}
+
+.authFooterLinks a {
+    color: var(--text-muted, #888);
+    text-decoration: none;
+}
+
+.authFooterLinks a:hover {
+    text-decoration: underline;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .authLayout {
+        flex-direction: column;
+    }
+
+    .authBrand {
+        min-height: 220px;
+        flex: none;
+        padding: 32px 24px;
+    }
+
+    .authPanel {
+        flex: none;
+        padding: 36px 24px;
+    }
+}

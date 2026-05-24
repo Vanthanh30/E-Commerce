@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import "./AdminProductList.css";
 
 const BASE_URL = "/api/sanPham";
 
@@ -62,46 +63,48 @@ function CreateView({ onBack }) {
   ];
 
   return (
-    <div>
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+    <div className="pl-wrapper">
+      <div className="pl-sub-header">
+        <div className="pl-sub-header-row">
+          <h1>Thêm sản phẩm</h1>
           <button className="btn btn-outline-secondary btn-sm" onClick={onBack}>
             ← Quay lại
           </button>
-          <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 700 }}>Thêm sản phẩm</h1>
         </div>
-        <p style={{ margin: 0, color: "#6b7280" }}>Thêm sản phẩm mới vào hệ thống.</p>
+        <p>Thêm sản phẩm mới vào hệ thống.</p>
       </div>
 
-      <div className="card p-4" style={{ maxWidth: 640 }}>
+      <div className="pl-form-card">
         {errors._global && <div className="alert alert-danger">{errors._global}</div>}
 
         <form onSubmit={handleSubmit}>
-          {fields.map(({ label, name, type, required }) => (
-            <div key={name} style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
-                {label} {required && <span style={{ color: "#ef4444" }}>*</span>}
-              </label>
-              <input
-                type={type} name={name}
-                className={`form-control ${errors[name] ? "is-invalid" : ""}`}
-                value={form[name]}
-                onChange={handleChange}
-              />
-              {errors[name] && <div className="invalid-feedback" style={{ display: "block" }}>{errors[name]}</div>}
-            </div>
-          ))}
+          <div className="pl-form-grid">
+            {fields.map(({ label, name, type, required }) => (
+              <div key={name} className="pl-field">
+                <label>
+                  {label} {required && <span className="req">*</span>}
+                </label>
+                <input
+                  type={type} name={name}
+                  className={`form-control ${errors[name] ? "is-invalid" : ""}`}
+                  value={form[name]}
+                  onChange={handleChange}
+                />
+                {errors[name] && <div className="invalid-feedback" style={{ display: "block" }}>{errors[name]}</div>}
+              </div>
+            ))}
 
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: "block", fontWeight: 600, fontSize: 14, marginBottom: 4 }}>Mô tả</label>
-            <textarea
-              name="moTa" className="form-control" rows={4}
-              placeholder="Nhập mô tả sản phẩm"
-              value={form.moTa} onChange={handleChange}
-            />
+            <div className="pl-field pl-field-full">
+              <label>Mô tả</label>
+              <textarea
+                name="moTa" className="form-control" rows={4}
+                placeholder="Nhập mô tả sản phẩm"
+                value={form.moTa} onChange={handleChange}
+              />
+            </div>
           </div>
 
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className="pl-form-actions">
             <button type="button" className="btn btn-outline-secondary" onClick={onBack}>Hủy</button>
             <button type="submit" className="btn btn-primary" disabled={submitting}>
               {submitting ? "Đang lưu..." : "+ Thêm mới"}
@@ -135,11 +138,11 @@ function ListView({ onCreate }) {
   }, []);
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+    <div className="pl-wrapper">
+      <div className="pl-page-header">
         <div>
-          <h1 style={{ margin: "0 0 6px", fontSize: "1.5rem", fontWeight: 700 }}>Quản lý Sản phẩm</h1>
-          <p style={{ margin: 0, color: "#6b7280" }}>Quản lý toàn bộ sản phẩm trong hệ thống.</p>
+          <h1>Quản lý Sản phẩm</h1>
+          <p>Quản lý toàn bộ sản phẩm trong hệ thống.</p>
         </div>
         <button className="btn btn-primary" onClick={onCreate}>
           + Thêm sản phẩm
@@ -149,10 +152,10 @@ function ListView({ onCreate }) {
       {error && <div className="alert alert-danger">{error}</div>}
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: "40px 0", color: "#6b7280" }}>Đang tải...</div>
+        <div className="pl-loading">Đang tải...</div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-hover align-middle" style={{ width: "100%" }}>
+        <div className="pl-table-wrap">
+          <table className="table table-hover align-middle mb-0">
             <thead className="table-dark">
               <tr>
                 <th>Sản phẩm</th>
@@ -165,9 +168,7 @@ function ListView({ onCreate }) {
             <tbody>
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: "center", color: "#6b7280", padding: "32px 0" }}>
-                    Chưa có sản phẩm
-                  </td>
+                  <td colSpan={5} className="pl-empty">Chưa có sản phẩm</td>
                 </tr>
               ) : (
                 products.map((item) => (
@@ -210,7 +211,7 @@ export const AdminProductList = () => {
   const [view, setView] = useState("list");
 
   return (
-    <div className="container-fluid py-4 px-4">
+    <div className="container-fluid p-0">
       {view === "create"
         ? <CreateView onBack={() => setView("list")} />
         : <ListView onCreate={() => setView("create")} />

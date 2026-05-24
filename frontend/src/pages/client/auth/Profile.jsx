@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { authService } from "../../../services/client/auth.service";
+import styles from "./Profile.module.css";
 
 export const Profile = () => {
   const { user } = useAuth();
@@ -31,9 +32,7 @@ export const Profile = () => {
           username: profileData.username || "",
           fullName: profileData.fullName || "",
           address: profileData.address || "",
-          birthDate: profileData.birthDate
-            ? profileData.birthDate.substring(0, 10)
-            : "",
+          birthDate: profileData.birthDate ? profileData.birthDate.substring(0, 10) : "",
           email: profileData.email || "",
           oldPassword: "",
           newPassword: "",
@@ -58,37 +57,29 @@ export const Profile = () => {
 
     try {
       await authService.updateCustomer(user.customerId, formData);
-      setMessage({
-        type: "success",
-        text: "Cập nhật hồ sơ tài khoản Atelier Accord thành công!",
-      });
+      setMessage({ type: "success", text: "Cập nhật hồ sơ tài khoản Atelier Accord thành công!" });
       setFormData({ ...formData, oldPassword: "", newPassword: "" });
     } catch (error) {
-      setMessage({
-        type: "danger",
-        text: error.message || "Mật khẩu cũ không chính xác.",
-      });
+      setMessage({ type: "danger", text: error.message || "Mật khẩu cũ không chính xác." });
     }
   };
 
+  /* ── Loading state ── */
   if (loading) {
-    return (
-      <div className="page-container">
-        Đang đọc thông tin hồ sơ tài khoản...
-      </div>
-    );
+    return <div className={styles.stateMessage}>Đang đọc thông tin hồ sơ tài khoản...</div>;
   }
 
+  /* ── Chưa đăng nhập ── */
   if (!user?.customerId) {
     return (
-      <div className="page-container" style={{ maxWidth: "640px" }}>
-        <h1 className="page-title">Thông tin cá nhân</h1>
-        <p className="page-subtitle">
+      <div className={styles.pageContainer}>
+        <h1 className={styles.pageTitle}>Thông tin cá nhân</h1>
+        <p className={styles.pageSubtitle}>
           Vui lòng đăng nhập để quản lý hồ sơ tài khoản Atelier Accord.
         </p>
         <button
           type="button"
-          className="btn btn-primary"
+          className={styles.btnSecondary}
           onClick={() => navigate("/login")}
         >
           Đăng nhập
@@ -97,122 +88,113 @@ export const Profile = () => {
     );
   }
 
+  /* ── Form chính ── */
   return (
-    <div className="page-container" style={{ maxWidth: "640px" }}>
-      <h1 className="page-title">Thông tin cá nhân</h1>
-      <p className="page-subtitle">
-        Quản lý hồ sơ tài khoản Atelier Accord.
-      </p>
+    <div className={styles.pageContainer}>
+      <h1 className={styles.pageTitle}>Thông tin cá nhân</h1>
+      <p className={styles.pageSubtitle}>Quản lý hồ sơ tài khoản Atelier Accord.</p>
 
-      <div className="negotiation-card">
+      <div className={styles.card}>
         {message.text && (
-          <div
-            style={{
-              color:
-                message.type === "success" ? "var(--primary)" : "var(--danger)",
-              marginBottom: "16px",
-              fontWeight: 500,
-            }}
-          >
+          <div className={message.type === "success" ? styles.alertSuccess : styles.alertDanger}>
             {message.text}
           </div>
         )}
 
         <form onSubmit={handleUpdate}>
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Số điện thoại</label>
-            <input
-              type="text"
-              className="form-control"
-              value={user.customerId}
-              readOnly
-            />
+            <input type="text" className={styles.formControl} value={user.customerId} readOnly />
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Họ và tên</label>
             <input
               type="text"
               name="fullName"
-              className="form-control"
+              className={styles.formControl}
               value={formData.fullName}
               onChange={handleChange}
               required
             />
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Địa chỉ</label>
             <input
               type="text"
               name="address"
-              className="form-control"
+              className={styles.formControl}
               value={formData.address}
               onChange={handleChange}
               required
             />
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Ngày sinh</label>
             <input
               type="date"
               name="birthDate"
-              className="form-control"
+              className={styles.formControl}
               value={formData.birthDate}
               onChange={handleChange}
               required
             />
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Tên đăng nhập</label>
             <input
               type="text"
               name="username"
-              className="form-control"
+              className={styles.formControl}
               value={formData.username}
               onChange={handleChange}
               required
             />
           </div>
 
-          <div className="form-group">
+          {/* Divider trước section đổi mật khẩu */}
+          <hr className={styles.sectionDivider} />
+          <p className={styles.sectionLabel}>Đổi mật khẩu</p>
+
+          <div className={styles.formGroup}>
             <label>Mật khẩu cũ</label>
             <input
               type="password"
               name="oldPassword"
-              className="form-control"
+              className={styles.formControl}
               value={formData.oldPassword}
               onChange={handleChange}
               required
             />
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Mật khẩu mới</label>
             <input
               type="password"
               name="newPassword"
-              className="form-control"
+              className={styles.formControl}
               value={formData.newPassword}
               onChange={handleChange}
               required
             />
           </div>
 
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label>Email</label>
             <input
               type="email"
               name="email"
-              className="form-control"
+              className={styles.formControl}
               value={formData.email}
               onChange={handleChange}
             />
           </div>
 
-          <button type="submit" className="btn btn-primary btn-block">
+          <button type="submit" className={styles.btnPrimary}>
             Cập nhật thông tin
           </button>
         </form>

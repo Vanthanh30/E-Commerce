@@ -3,25 +3,26 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { orderService } from "../../../services/order.service";
 import { currency } from "../../../utils/formatters";
+import styles from "./Checkout.module.css";
 
 export const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Lấy dữ liệu sản phẩm được truyền từ trang Chi tiết hoặc Giỏ hàng
   const product = location.state?.product;
   const quantity = location.state?.quantity || 1;
 
   const [address, setAddress] = useState(user?.address || "");
   const [note, setNote] = useState("");
 
-  if (!product)
+  if (!product) {
     return (
-      <div className="page-container">
+      <div className={styles.errorState}>
         Lỗi: Không tìm thấy sản phẩm để thanh toán.
       </div>
     );
+  }
 
   const total = product.fixedPrice * quantity;
 
@@ -40,7 +41,6 @@ export const Checkout = () => {
       const res = await orderService.create(orderData);
 
       if (paymentMethod === 1) {
-        // Chuyển sang trang Quét mã QR
         navigate("/payment", { state: { orderId: res.orderId, total } });
       } else {
         alert("Đặt hàng COD thành công!");
@@ -52,53 +52,52 @@ export const Checkout = () => {
   };
 
   return (
-    <div className="page-container" style={{ maxWidth: "720px" }}>
-      <h1 className="page-title">Đặt hàng</h1>
-      <div className="negotiation-card">
-        <p>
-          <strong>{product.name || product.tenSanPham}</strong>
-        </p>
-        <p className="page-subtitle">
+    <div className={styles.pageContainer}>
+      <h1 className={styles.pageTitle}>Đặt hàng</h1>
+
+      <div className={styles.card}>
+        {/* Product summary */}
+        <p className={styles.productName}>{product.name || product.tenSanPham}</p>
+        <p className={styles.productMeta}>
           Số lượng: {quantity} · Đơn giá: {currency(product.fixedPrice)}
         </p>
 
-        <div className="form-group" style={{ marginTop: "24px" }}>
+        {/* Address */}
+        <div className={styles.formGroup}>
           <label>Địa chỉ nhận hàng</label>
           <input
             type="text"
-            className="form-control"
+            className={styles.formControl}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             required
           />
         </div>
-        <div className="form-group">
+
+        {/* Note */}
+        <div className={styles.formGroup}>
           <label>Ghi chú</label>
           <textarea
-            className="form-control"
+            className={styles.formControl}
             rows="3"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Vận chuyển cẩn thận nhé..."
-          ></textarea>
+          />
         </div>
 
-        <p className="summary-total" style={{ margin: "20px 0" }}>
+        {/* Total */}
+        <div className={styles.summaryTotal}>
           <span>Tổng tiền</span>
-          <span>{currency(total)}</span>
-        </p>
+          <span className={styles.summaryTotalValue}>{currency(total)}</span>
+        </div>
 
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <button
-            className="btn btn-primary"
-            onClick={() => handlePlaceOrder(0)}
-          >
+        {/* Actions */}
+        <div className={styles.btnGroup}>
+          <button className={styles.btnPrimary} onClick={() => handlePlaceOrder(0)}>
             Đặt hàng COD
           </button>
-          <button
-            className="btn btn-outline"
-            onClick={() => handlePlaceOrder(1)}
-          >
+          <button className={styles.btnOutline} onClick={() => handlePlaceOrder(1)}>
             Thanh toán Online
           </button>
         </div>

@@ -1,0 +1,122 @@
+/* ============================================================
+   Category – Quản lý Danh Mục
+   ============================================================ */
+
+.cat-wrapper {
+    padding: 2rem 2.5rem;
+}
+
+.cat-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.cat-page-header h1 {
+    margin: 0 0 0.375rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.cat-page-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+.cat-sub-header {
+    margin-bottom: 1.5rem;
+}
+
+.cat-sub-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.375rem;
+}
+
+.cat-sub-header-row h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.cat-sub-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+.cat-form-card {
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+.cat-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 2rem;
+}
+
+.cat-field-full {
+    grid-column: 1 / -1;
+}
+
+.cat-field {
+    margin-bottom: 1rem;
+}
+
+.cat-field label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.cat-field label .req {
+    color: #ef4444;
+}
+
+.cat-field label.muted {
+    color: #6b7280;
+}
+
+.cat-form-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #f3f4f6;
+}
+
+.cat-danger-card {
+    background: #fff5f5;
+    border: 1px solid #fca5a5;
+    border-radius: 0.75rem;
+    padding: 2rem 2.5rem;
+    width: 100%;
+}
+
+.cat-danger-card h5 {
+    color: #dc2626;
+    font-weight: 700;
+    margin-bottom: 0.375rem;
+}
+
+.cat-danger-card p {
+    color: #374151;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.cat-table-wrap {
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.cat-loading,
+.cat-empty {
+    text-align: center;
+    padding: 2.5rem 0;
+    color: #9ca3af;
+}
