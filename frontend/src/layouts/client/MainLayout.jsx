@@ -1,10 +1,19 @@
-import React from "react";
-import { Outlet, Link, useLocation } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import SearchBar from "../../components/admin/SearchBar";
 
 const MainLayout = () => {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { user, role, logout } = useAuth();
+
+  // BẢO MẬT LAYOUT: Nếu là admin thì đẩy thẳng sang trang Dashboard/Stats
+  useEffect(() => {
+    if (role === "admin") {
+      navigate("/admin/dashboard"); // Hoặc "/admin/stats" tùy bạn thiết lập
+    }
+  }, [role, navigate]);
 
   return (
     <div>
@@ -36,15 +45,22 @@ const MainLayout = () => {
           </Link>
         </nav>
 
-        <div className="header-actions">
-          <form className="search-form" onSubmit={(e) => e.preventDefault()}>
-            <input type="text" placeholder="Tìm kiếm..." />
-            <button type="submit">
-              <i className="material-icons" style={{ fontSize: "18px" }}>
-                search
-              </i>
-            </button>
-          </form>
+        <div
+          className="header-actions"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "20px",
+          }}
+        >
+          <div style={{ width: "300px" }}>
+            <SearchBar
+              placeholder="Tìm kiếm nội thất..."
+              onSelectProduct={(product) => {
+                navigate(`/product/${product.productId}`);
+              }}
+            />
+          </div>
 
           {user ? (
             <div

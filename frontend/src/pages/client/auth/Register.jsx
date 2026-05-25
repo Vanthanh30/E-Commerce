@@ -42,7 +42,7 @@ const Register = () => {
         <div
           className="auth-brand-bg"
           style={{
-            backgroundImage: `url(${assetUrl("/images/auth-hero.png")})`,
+            backgroundImage: `url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1000&q=80')`,
           }}
         ></div>
         <div className="auth-brand-content">
@@ -123,8 +123,25 @@ const Register = () => {
             Tạo tài khoản
           </button>
         </form>
-        <p style={{ marginTop: "16px", fontSize: "13px", textAlign: "center" }}>
-          Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
+        <p
+          style={{
+            marginTop: "24px",
+            fontSize: "13px",
+            textAlign: "center",
+            color: "var(--text-muted)",
+          }}
+        >
+          Đã có tài khoản?{" "}
+          <Link
+            to="/login"
+            style={{
+              color: "var(--primary)",
+              fontWeight: "600",
+              textDecoration: "none",
+            }}
+          >
+            Đăng nhập
+          </Link>
         </p>
       </div>
     </div>

@@ -25,6 +25,7 @@ export const useAuth = () => {
     sessionStorage.removeItem("user");
     sessionStorage.removeItem("role");
     setUser(null);
+    setRole(null);
     navigate("/login");
   };
 

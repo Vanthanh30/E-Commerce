@@ -56,21 +56,24 @@ export const useCheckout = () => {
     try {
       const user = JSON.parse(sessionStorage.getItem("user"));
 
-      // Xử lý lặp qua từng sản phẩm trong giỏ để khớp với hàm tạo đơn hàng của Backend
-      for (const item of cartItems) {
-        await orderService.create({
-          customerId: user.customerId,
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.fixedPrice || item.price,
-          address: shippingAddress,
-          paymentMethod: Number(paymentMethod),
-          status: 1, // Trạng thái ban đầu: 1 - Chờ xác nhận (Theo status.helper.js)
-        });
-      }
+      // Gom toàn bộ sản phẩm thành 1 mảng
+      const orderItems = cartItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.fixedPrice || item.price,
+      }));
+
+      // Gọi API TẠO 1 ĐƠN HÀNG DUY NHẤT chứa toàn bộ sản phẩm
+      await orderService.create({
+        customerId: user.customerId,
+        items: orderItems,
+        address: shippingAddress,
+        paymentMethod: Number(paymentMethod),
+        status: 1,
+      });
 
       alert("Đặt hàng thành công!");
-      navigate("/orders"); // Chuyển hướng người dùng sang trang danh sách đơn hàng
+      navigate("/orders");
     } catch (err) {
       alert(
         err.message ||

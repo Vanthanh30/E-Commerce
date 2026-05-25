@@ -5,37 +5,46 @@ import Product from "../models/product.model.js";
 import { createSingleItemOrder } from "../helpers/order.helper.js";
 import { orderStatus } from "../helpers/status.helper.js";
 
-async function flattenOrders(filter = {}) {
-  const orders = await Order.find(filter).sort({ saleDate: -1, orderId: -1 }).lean();
-  const productIds = [...new Set(orders.flatMap((order) => order.items.map((item) => item.productId)))];
-  const customerIds = [...new Set(orders.map((order) => order.customerId))];
-  const [products, customers] = await Promise.all([
-    Product.find({ productId: { $in: productIds } }).lean(),
-    Customer.find({ customerId: { $in: customerIds } }).lean()
-  ]);
+async function formatOrders(filter = {}) {
+  const orders = await Order.find(filter)
+    .sort({ saleDate: -1, orderId: -1 })
+    .lean();
+  const productIds = [
+    ...new Set(
+      orders.flatMap((order) => order.items.map((item) => item.productId)),
+    ),
+  ];
+  const products = await Product.find({
+    productId: { $in: productIds },
+  }).lean();
   const productMap = new Map(products.map((item) => [item.productId, item]));
-  const customerMap = new Map(customers.map((item) => [item.customerId, item]));
 
-  return orders.flatMap((order) => {
-    const customer = customerMap.get(order.customerId) || {};
-    return order.items.map((item) => {
+  return orders.map((order) => {
+    let totalAmount = 0;
+
+    const formattedItems = order.items.map((item) => {
       const product = productMap.get(item.productId) || {};
+      totalAmount += item.salePrice * item.quantity;
       return {
-        orderId: order.orderId,
-        customerId: order.customerId,
-        saleDate: order.saleDate,
-        paymentMethod: order.paymentMethod,
-        status: order.status,
-        statusText: orderStatus(order.status),
-        shippingAddress: order.shippingAddress,
         productId: item.productId,
-        quantity: item.quantity,
-        price: item.salePrice,
         productName: product.name || "",
         imageUrl: product.imageUrl || "",
-        customerName: customer.fullName || ""
+        quantity: item.quantity,
+        price: item.salePrice,
       };
     });
+
+    return {
+      orderId: order.orderId,
+      customerId: order.customerId,
+      saleDate: order.saleDate,
+      paymentMethod: order.paymentMethod,
+      status: order.status,
+      statusText: orderStatus(order.status),
+      shippingAddress: order.shippingAddress,
+      items: formattedItems,
+      totalAmount: totalAmount,
+    };
   });
 }
 
@@ -43,7 +52,7 @@ export async function listOrders(req, res) {
   const filter = {};
   if (req.query.customerId) filter.customerId = req.query.customerId;
   if (req.query.status) filter.status = Number(req.query.status);
-  res.json(await flattenOrders(filter));
+  res.json(await formatOrders(filter));
 }
 
 export async function getOrder(req, res) {
@@ -55,7 +64,9 @@ export async function getOrder(req, res) {
 
   const [customer, products] = await Promise.all([
     Customer.findOne({ customerId: order.customerId }).lean(),
-    Product.find({ productId: { $in: order.items.map((item) => item.productId) } }).lean()
+    Product.find({
+      productId: { $in: order.items.map((item) => item.productId) },
+    }).lean(),
   ]);
   const productMap = new Map(products.map((item) => [item.productId, item]));
 
@@ -76,26 +87,37 @@ export async function getOrder(req, res) {
         productName: product.name || "",
         imageUrl: product.imageUrl || "",
         quantity: item.quantity,
-        price: item.salePrice
+        price: item.salePrice,
       };
-    })
+    }),
   });
 }
 
 export async function createOrder(req, res) {
-  const order = await createSingleItemOrder({
-    customerId: req.body.customerId,
-    productId: req.body.productId,
-    quantity: Number(req.body.quantity || 1),
-    price: Number(req.body.price || 0),
-    address: req.body.address || req.body.shippingAddress || "",
-    paymentMethod: Number(req.body.paymentMethod || 0),
-    status: Number(req.body.status || 1)
+  const { customerId, address, shippingAddress, paymentMethod, status, items } =
+    req.body;
+
+  const orderId = "ORD-" + Date.now().toString().slice(-6);
+
+  const orderItems = items.map((item) => ({
+    productId: item.productId,
+    quantity: item.quantity,
+    salePrice: item.price,
+  }));
+
+  const order = await Order.create({
+    orderId,
+    customerId,
+    shippingAddress: address || shippingAddress || "",
+    paymentMethod: Number(paymentMethod || 0),
+    status: Number(status || 1),
+    items: orderItems,
   });
 
-  await CartItem.deleteOne({
-    customerId: req.body.customerId,
-    productId: req.body.productId
+  const productIdsToClear = items.map((item) => item.productId);
+  await CartItem.deleteMany({
+    customerId: customerId,
+    productId: { $in: productIdsToClear },
   });
 
   res.status(201).json({ orderId: order.orderId });
@@ -111,7 +133,7 @@ export async function updateOrderStatus(req, res) {
   const order = await Order.findOneAndUpdate(
     { orderId: req.params.id },
     { $set: { status } },
-    { new: true }
+    { new: true },
   ).lean();
 
   if (!order) {
@@ -119,5 +141,8 @@ export async function updateOrderStatus(req, res) {
     return;
   }
 
-  res.json({ message: "Order status updated", statusText: orderStatus(status) });
+  res.json({
+    message: "Order status updated",
+    statusText: orderStatus(status),
+  });
 }

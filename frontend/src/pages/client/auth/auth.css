@@ -1,3 +1,5 @@
+/* src/pages/client/auth/auth.css */
+
 /* Khung cha full toàn màn hình, khống chế chiều cao không quá 100vh */
 .auth-container-fullscreen {
   display: flex;
@@ -7,10 +9,57 @@
   background-color: var(--surface, #ffffff);
 }
 
-/* Panel chứa form nhập liệu bên phải */
+/* ========================================= */
+/* PHẦN TRÁI: BANNER THƯƠNG HIỆU             */
+/* ========================================= */
+.auth-brand {
+  flex: 1; /* Cho phép phần ảnh tự động chiếm phần không gian còn lại */
+  position: relative;
+  background: linear-gradient(135deg, #1a2e1f 0%, #2d4a35 100%);
+  color: #fff;
+  padding: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.auth-brand-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.35;
+}
+
+.auth-brand-content {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  background: rgba(59, 110, 78, 0.5);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 24px;
+}
+
+.auth-brand h1 {
+  font-size: 42px;
+  font-weight: 300;
+  line-height: 1.2;
+}
+
+/* ========================================= */
+/* PHẦN PHẢI: BẢNG FORM ĐIỀN THÔNG TIN       */
+/* ========================================= */
 .auth-panel-compact {
-  flex: 1;
-  max-width: 460px;
+  width: 100%;
+  max-width: 460px; /* Khống chế độ rộng của form */
   height: 100%;
   padding: 40px 48px;
   display: flex;
@@ -20,7 +69,6 @@
   background: #ffffff;
 }
 
-/* Tiêu đề chính */
 .auth-panel-compact h2 {
   font-size: 26px;
   font-weight: 700;
@@ -35,7 +83,6 @@
   margin-bottom: 24px;
 }
 
-/* Tối ưu khoảng cách các ô nhập liệu gọn lại */
 .auth-panel-compact .form-group {
   margin-bottom: 14px;
 }
@@ -117,4 +164,19 @@
 
 .back-to-shop-link:hover {
   color: var(--primary, #1f6c55);
+}
+
+/* Ẩn phần hình ảnh thương hiệu khi màn hình nhỏ (Mobile/Tablet) */
+@media (max-width: 768px) {
+  .auth-brand {
+    display: none;
+  }
+  .auth-panel-compact {
+    max-width: 100%;
+    align-items: center;
+  }
+  .auth-panel-compact form {
+    width: 100%;
+    max-width: 400px;
+  }
 }

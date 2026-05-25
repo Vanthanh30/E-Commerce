@@ -12,11 +12,6 @@ const ProductCard = ({ item }) => {
             alt={item.name}
             className="product-img"
           />
-          <button className="favorite-btn" onClick={(e) => e.preventDefault()}>
-            <i className="material-icons" style={{ fontSize: "18px" }}>
-              favorite_border
-            </i>
-          </button>
         </div>
       </Link>
       <div className="product-info">

@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useOrders } from "../../../hooks/useOrders";
-import OrderItem from "../../../components/client/OrderItem"; // Import Component vừa tạo
+import { useBargains } from "../../../hooks/useBargains";
+import BargainItem from "../../../components/client/BargainItem"; // Đổi đường dẫn nếu file nằm ở components/client/BargainItem
 import "../../../assets/history-list.css";
 
-const Orders = () => {
+const Bargains = () => {
   const navigate = useNavigate();
-  const { orders, loading, error } = useOrders();
+  const { bargains, loading, error } = useBargains();
 
   useEffect(() => {
     if (!sessionStorage.getItem("user")) navigate("/login");
@@ -15,7 +15,7 @@ const Orders = () => {
   if (loading)
     return (
       <div style={{ textAlign: "center", padding: "100px" }}>
-        Đang tải lịch sử đơn hàng...
+        Đang tải lịch sử thương lượng...
       </div>
     );
   if (error)
@@ -33,20 +33,25 @@ const Orders = () => {
 
   return (
     <div className="history-container page-container">
+      {/* TIÊU ĐỀ CHUẨN CỦA TRANG NÀY ĐÂY */}
       <h1 className="page-title" style={{ marginBottom: "32px" }}>
-        Đơn hàng của bạn
+        Lịch sử thương lượng giá
       </h1>
-      {orders.length === 0 ? (
+
+      {bargains.length === 0 ? (
         <p style={{ textAlign: "center", color: "var(--text-muted)" }}>
-          Bạn chưa có đơn hàng nào.
+          Bạn chưa có phiên thương lượng nào.
         </p>
       ) : (
-        orders.map((item, index) => (
-          <OrderItem key={`${item.orderId}-${index}`} item={item} />
+        bargains.map((item, index) => (
+          <BargainItem
+            key={`${item.bargainId || item._id}-${index}`}
+            item={item}
+          />
         ))
       )}
     </div>
   );
 };
 
-export default Orders;
+export default Bargains;

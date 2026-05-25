@@ -21,47 +21,25 @@ const Login = () => {
     setLoading(true);
 
     try {
-
       const response = await authService.login(formData);
 
       console.log("LOGIN RESPONSE:", response);
 
       if (response?.user) {
+        sessionStorage.setItem("user", JSON.stringify(response.user));
 
-        sessionStorage.setItem(
-          "user",
-          JSON.stringify(response.user)
-        );
+        sessionStorage.setItem("role", response.role);
 
-        sessionStorage.setItem(
-          "role",
-          response.role
-        );
-
-        navigate(
-          response.role === "admin"
-            ? "/admin/stats"
-            : "/"
-        );
-
+        navigate(response.role === "admin" ? "/admin/stats" : "/");
       } else {
-
         setError("Đăng nhập thất bại");
-
       }
-
     } catch (err) {
-
       console.error(err);
 
-      setError(
-        err.message || "Đăng nhập thất bại"
-      );
-
+      setError(err.message || "Đăng nhập thất bại");
     } finally {
-
       setLoading(false);
-
     }
   };
 
@@ -71,7 +49,7 @@ const Login = () => {
         <div
           className="auth-brand-bg"
           style={{
-            backgroundImage: `url(${assetUrl("/images/auth-hero.png")})`,
+            backgroundImage: `url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1000&q=80')`,
           }}
         ></div>
         <div className="auth-brand-content">
@@ -144,6 +122,26 @@ const Login = () => {
             Đăng nhập
           </button>
         </form>
+        <p
+          style={{
+            marginTop: "24px",
+            fontSize: "13px",
+            textAlign: "center",
+            color: "var(--text-muted)",
+          }}
+        >
+          Chưa có tài khoản?{" "}
+          <Link
+            to="/register"
+            style={{
+              color: "var(--primary)",
+              fontWeight: "600",
+              textDecoration: "none",
+            }}
+          >
+            Đăng ký ngay
+          </Link>
+        </p>
       </div>
     </div>
   );
