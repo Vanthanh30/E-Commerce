@@ -1,0 +1,208 @@
+.adminContent {
+    padding: 32px;
+}
+
+/* ── Page header ── */
+.dashPageHeader {
+    margin-bottom: 20px;
+}
+
+/* ── Tiêu đề trang ── */
+.pageTitle {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin: 0 0 4px;
+    color: var(--text, #1a1a18);
+    letter-spacing: -0.01em;
+}
+
+.pageSubtitle {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-muted, #888);
+}
+
+/* ── Toolbar (tabs + year select) ── */
+.statsToolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+/* ── Filter tabs ── */
+.filterTabs {
+    display: flex;
+    border: 1px solid var(--border, #e0ddd8);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-card, #fff);
+}
+
+.filterTab {
+    padding: 0.5rem 1.125rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text, #1a1a18);
+    text-decoration: none;
+    border-right: 1px solid var(--border, #e0ddd8);
+    transition: background 0.15s, color 0.15s;
+    /* reset button defaults */
+    background: none;
+    border-top: none;
+    border-bottom: none;
+    border-left: none;
+    cursor: pointer;
+    font: inherit;
+}
+
+.filterTab:last-child {
+    border-right: none;
+}
+
+.filterTab:hover {
+    background: #f0f0ee;
+    color: var(--text, #1a1a18);
+}
+
+.filterTabActive {
+    background: var(--primary, #1f6c55) !important;
+    color: #fff !important;
+}
+
+/* ── Year select ── */
+.yearSelect {
+    height: 38px;
+    min-width: 110px;
+    border: 1px solid var(--border, #e0ddd8);
+    border-radius: 8px;
+    background: var(--bg-card, #fff);
+    color: var(--text, #1a1a18);
+    padding: 0 12px;
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.yearSelect:focus {
+    outline: 2px solid var(--primary, #1f6c55);
+    outline-offset: 1px;
+}
+
+/* ── Grid stat cards ── */
+.adminStats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+/* ── Stat card ── */
+.statCard {
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e0ddd8);
+    border-radius: 8px;
+    padding: 20px 24px;
+    min-width: 180px;
+}
+
+.statCard label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted, #888);
+    margin-bottom: 8px;
+    cursor: default;
+}
+
+.statCard strong {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--text, #1a1a18);
+    line-height: 1.1;
+}
+
+/* Variant nổi bật */
+.statCardFeatured {
+    background: rgba(31, 108, 85, 0.04);
+    border: 1px solid var(--primary, #1f6c55);
+    border-radius: 8px;
+    padding: 20px 24px;
+    min-width: 180px;
+}
+
+.statCardFeatured label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted, #888);
+    margin-bottom: 8px;
+    cursor: default;
+}
+
+.statCardFeatured strong {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--primary, #1f6c55);
+    line-height: 1.1;
+}
+
+/* ── Chart panel ── */
+.chartPanel {
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e0ddd8);
+    border-radius: 8px;
+    padding: 28px;
+}
+
+.chartPanelHeader {
+    margin-bottom: 18px;
+}
+
+.chartPanelTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text, #1a1a18);
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+}
+
+.chartPanelSubtitle {
+    font-size: 0.8125rem;
+    color: var(--text-muted, #888);
+    margin: 0;
+}
+
+.chartFrame {
+    height: 420px;
+    position: relative;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .adminContent {
+        padding: 20px 16px;
+    }
+
+    .chartFrame {
+        height: 280px;
+    }
+
+    .statCard strong,
+    .statCardFeatured strong {
+        font-size: 1.3rem;
+    }
+
+    .statsToolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

@@ -16,19 +16,52 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setError("");
     setLoading(true);
+
     try {
+
       const response = await authService.login(formData);
-      if (response && response.user) {
-        sessionStorage.setItem("user", JSON.stringify(response.user));
-        sessionStorage.setItem("role", response.role);
-        navigate(response.role === "admin" ? "/admin/dashboard" : "/");
+
+      console.log("LOGIN RESPONSE:", response);
+
+      if (response?.user) {
+
+        sessionStorage.setItem(
+          "user",
+          JSON.stringify(response.user)
+        );
+
+        sessionStorage.setItem(
+          "role",
+          response.role
+        );
+
+        navigate(
+          response.role === "admin"
+            ? "/admin/stats"
+            : "/"
+        );
+
+      } else {
+
+        setError("Đăng nhập thất bại");
+
       }
+
     } catch (err) {
-      setError(err.message || "Tài khoản hoặc mật khẩu không chính xác.");
+
+      console.error(err);
+
+      setError(
+        err.message || "Đăng nhập thất bại"
+      );
+
     } finally {
+
       setLoading(false);
+
     }
   };
 

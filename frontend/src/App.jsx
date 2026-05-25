@@ -1,8 +1,10 @@
-import { Routes, Route } from "react-router-dom";
-// Import Layouts
+import { Routes, Route, Navigate } from "react-router-dom";
+
+// Layouts
 import MainLayout from "./layouts/client/MainLayout";
 import AdminLayout from "./layouts/admin/AdminLayout";
-// Import Pages
+
+// Client Pages
 import Home from "./pages/client/home/Home";
 import Login from "./pages/client/auth/Login";
 import Register from "./pages/client/auth/Register";
@@ -13,12 +15,24 @@ import Checkout from "./pages/client/checkout/Checkout";
 import Orders from "./pages/client/orders/Orders";
 import Bargains from "./pages/client/bargains/Bargains";
 
+// Admin Pages
+import AdminProductList from "./pages/admin/products/AdminProductList";
+import RevenueStats from "./pages/admin/dashboard/Dashboard";
+import BiddingDetails from "./pages/admin/bidding/BiddingDetails";
+import Category from "./pages/admin/category/Category";
+import AdminOrders from "./pages/admin/orders/AdminOrders";
+
 function App() {
+  const role = sessionStorage.getItem("role");
+
   return (
     <Routes>
+
+      {/* Auth */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      {/* Các Route dành cho Khách hàng (Dùng chung MainLayout) */}
+
+      {/* Client */}
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Home />} />
         <Route path="profile" element={<Profile />} />
@@ -29,14 +43,30 @@ function App() {
         <Route path="bargains" element={<Bargains />} />
       </Route>
 
-      {/* Các Route dành cho Admin (Dùng chung AdminLayout) */}
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route path="dashboard" element={<h2>Dashboard Admin</h2>} />
-        {/* Sau này thêm: <Route path="products" element={<Products />} /> */}
+      {/* Admin */}
+      <Route
+        path="/admin"
+        element={
+          role === "admin"
+            ? <AdminLayout />
+            : <Navigate to="/login" />
+        }
+      >
+
+        <Route path="products" element={<AdminProductList />} />
+        <Route path="stats" element={<RevenueStats />} />
+        <Route path="biddingdetails" element={<BiddingDetails />} />
+        <Route path="category" element={<Category />} />
+        <Route path="orders" element={<AdminOrders />} />
+
       </Route>
 
-      {/* Route cho trang 404 */}
-      <Route path="*" element={<h2>404 - Không tìm thấy trang</h2>} />
+      {/* 404 */}
+      <Route
+        path="*"
+        element={<h2>404 - Không tìm thấy trang</h2>}
+      />
+
     </Routes>
   );
 }
