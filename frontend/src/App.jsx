@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-
+import ProtectedRoute from "./components/ProtectedRoute";
 // Layouts
 import MainLayout from "./layouts/client/MainLayout";
 import AdminLayout from "./layouts/admin/AdminLayout";
@@ -27,7 +27,6 @@ function App() {
 
   return (
     <Routes>
-
       {/* Auth */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -47,26 +46,20 @@ function App() {
       <Route
         path="/admin"
         element={
-          role === "admin"
-            ? <AdminLayout />
-            : <Navigate to="/login" />
+          <ProtectedRoute allowedRole="admin">
+            <AdminLayout />
+          </ProtectedRoute>
         }
       >
-
         <Route path="products" element={<AdminProductList />} />
         <Route path="stats" element={<RevenueStats />} />
         <Route path="biddingdetails" element={<BiddingDetails />} />
         <Route path="category" element={<Category />} />
         <Route path="orders" element={<AdminOrders />} />
-
       </Route>
 
       {/* 404 */}
-      <Route
-        path="*"
-        element={<h2>404 - Không tìm thấy trang</h2>}
-      />
-
+      <Route path="*" element={<h2>404 - Không tìm thấy trang</h2>} />
     </Routes>
   );
 }
