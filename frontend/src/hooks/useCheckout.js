@@ -1,0 +1,102 @@
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { cartService } from "../services/client/cartService";
+import { orderService } from "../services/client/orderService";
+
+export const useCheckout = () => {
+  const navigate = useNavigate();
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState(0); // 0: COD (Theo mặc định order.helper.js)
+
+  // Tải thông tin xem trước đơn hàng từ giỏ hàng hiện tại
+  const loadCheckoutData = useCallback(async () => {
+    try {
+      const user = JSON.parse(sessionStorage.getItem("user"));
+      if (!user || !user.customerId) {
+        navigate("/login");
+        return;
+      }
+
+      // Lấy các sản phẩm trong giỏ hàng để hiển thị soát xét trước khi nhấn mua
+      const response = await cartService.getCart(user.customerId);
+      const items = response.items || response.data || response || [];
+      setCartItems(items);
+
+      // Tự động điền trước địa chỉ nếu hồ sơ cá nhân đã có sẵn dữ liệu
+      if (user.address) {
+        setShippingAddress(user.address);
+      }
+    } catch (err) {
+      console.error("Lỗi tải dữ liệu thanh toán:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    loadCheckoutData();
+  }, [loadCheckoutData]);
+
+  // Xử lý logic gửi đơn hàng tuần tự
+  const processCheckout = async (e) => {
+    e.preventDefault();
+    if (!shippingAddress.trim()) {
+      alert("Vui lòng nhập địa chỉ nhận hàng.");
+      return;
+    }
+    if (cartItems.length === 0) {
+      alert("Giỏ hàng trống, không thể tiến hành thanh toán.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const user = JSON.parse(sessionStorage.getItem("user"));
+
+      // Xử lý lặp qua từng sản phẩm trong giỏ để khớp với hàm tạo đơn hàng của Backend
+      for (const item of cartItems) {
+        await orderService.create({
+          customerId: user.customerId,
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.fixedPrice || item.price,
+          address: shippingAddress,
+          paymentMethod: Number(paymentMethod),
+          status: 1, // Trạng thái ban đầu: 1 - Chờ xác nhận (Theo status.helper.js)
+        });
+      }
+
+      alert("Đặt hàng thành công!");
+      navigate("/orders"); // Chuyển hướng người dùng sang trang danh sách đơn hàng
+    } catch (err) {
+      alert(
+        err.message ||
+          "Có lỗi xảy ra trong quá trình đặt hàng. Vui lòng thử lại.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const calculateTotal = () => {
+    return cartItems.reduce(
+      (sum, item) => sum + (item.fixedPrice || item.price || 0) * item.quantity,
+      0,
+    );
+  };
+
+  return {
+    cartItems,
+    loading,
+    submitting,
+    shippingAddress,
+    setShippingAddress,
+    paymentMethod,
+    setPaymentMethod,
+    processCheckout,
+    calculateTotal,
+  };
+};

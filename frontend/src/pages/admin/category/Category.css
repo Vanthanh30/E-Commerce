@@ -1,0 +1,274 @@
+/* ============================================================
+   Category – Quản lý Danh Mục
+   ============================================================ */
+
+.cat-wrapper {
+    padding: 2rem 2.5rem;
+}
+
+/* ---- Page / Sub header ---- */
+.cat-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.cat-page-header h1 {
+    margin: 0 0 0.375rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.cat-page-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+/* kept for backward-compat; cat-page-header now handles both layouts */
+.cat-sub-header {
+    margin-bottom: 1.5rem;
+}
+
+.cat-sub-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.375rem;
+}
+
+.cat-sub-header-row h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.cat-sub-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+/* ---- Form card ---- */
+.cat-form-card {
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+.cat-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 2rem;
+}
+
+.cat-field-full {
+    grid-column: 1 / -1;
+}
+
+.cat-field {
+    margin-bottom: 1rem;
+}
+
+.cat-field label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.cat-field label .req {
+    color: #ef4444;
+}
+
+.cat-field label.muted {
+    color: #6b7280;
+}
+
+.cat-form-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #f3f4f6;
+}
+
+/* ---- Danger panel (Edit page) ---- */
+.cat-danger-card {
+    background: #fff5f5;
+    border: 1px solid #fca5a5;
+    border-radius: 0.75rem;
+    padding: 2rem 2.5rem;
+    width: 100%;
+}
+
+.cat-danger-card h5 {
+    color: #dc2626;
+    font-weight: 700;
+    margin-bottom: 0.375rem;
+}
+
+.cat-danger-card p {
+    color: #374151;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+/* ---- Table ---- */
+.cat-table-wrap {
+    overflow-x: auto;
+    border-radius: 0.375rem;
+    border: 1px solid #e0ddd6;
+    background: #fff;
+}
+
+.cat-table-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+/* Header: nền cream/beige giống ảnh, chữ uppercase xám nhỏ */
+.cat-thead th {
+    background: #edeae3;
+    color: #6b7280;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.7rem 1.25rem;
+    border-bottom: 1px solid #ddd9d0;
+    border-top: none;
+    white-space: nowrap;
+}
+
+/* Row: nền trắng, border bottom nhạt */
+.cat-table-row {
+    cursor: pointer;
+    background: #fff;
+}
+
+.cat-table-row td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f0ede8;
+    font-size: 0.9rem;
+    color: #111827;
+    vertical-align: middle;
+}
+
+.cat-table-row:last-child td {
+    border-bottom: none;
+}
+
+.cat-table-row:hover {
+    background: #faf9f7;
+}
+
+/* Cột "Sửa" căn phải, text thuần màu xám */
+.cat-table-wrap table td:last-child {
+    text-align: right;
+    padding-right: 1.5rem;
+}
+
+.cat-link-edit {
+    color: #4b5563;
+    font-size: 0.875rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.cat-link-edit:hover {
+    color: #111827;
+    text-decoration: underline;
+}
+
+/* ---- Nút Quay lại (ảnh 2): border đen, nền trắng, chữ đen ---- */
+.cat-btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1.125rem;
+    background: #fff;
+    border: 1.5px solid #374151;
+    border-radius: 0.375rem;
+    color: #111827;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.cat-btn-back:hover {
+    background: #f3f4f6;
+}
+
+.cat-loading,
+.cat-empty {
+    text-align: center;
+    padding: 2.5rem 0;
+    color: #9ca3af;
+}
+
+/* ---- Delete confirm modal ---- */
+.cat-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.cat-modal {
+    background: #fff;
+    border: 2px solid #3b82f6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    width: 340px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.cat-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.cat-modal-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.cat-modal-close {
+    cursor: pointer;
+    font-size: 1.25rem;
+    color: #888;
+    line-height: 1;
+}
+
+.cat-modal-close:hover {
+    color: #374151;
+}
+
+.cat-modal-body {
+    margin-bottom: 1.25rem;
+}
+
+.cat-modal-warn {
+    color: #ef4444;
+    font-weight: 600;
+    margin: 0 0 6px;
+}
+
+.cat-modal-note {
+    color: #374151;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.cat-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.625rem;
+}

@@ -1,0 +1,286 @@
+/* ============================================================
+   BiddingDetails – Chi Tiết Trả Giá
+   ============================================================ */
+
+/* ---------- Layout wrapper ---------- */
+.bd-wrapper {
+    padding: 2rem 2.5rem;
+}
+
+/* ---------- Page header ---------- */
+.bd-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.bd-page-header h1 {
+    margin: 0 0 0.375rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.bd-page-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+/* ---------- Sub-page header ---------- */
+.bd-sub-header {
+    margin-bottom: 1.5rem;
+}
+
+.bd-sub-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.375rem;
+}
+
+.bd-sub-header-row h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.bd-sub-header-row h1.danger {
+    color: #dc2626;
+}
+
+.bd-sub-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+/* ---------- Two-column form card ---------- */
+.bd-form-card {
+    width: 100%;
+}
+
+.bd-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 2rem;
+}
+
+.bd-field-full {
+    grid-column: 1 / -1;
+}
+
+/* ---------- Individual field ---------- */
+.bd-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.125rem;
+}
+
+.bd-field label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.375rem;
+}
+
+.bd-field label .req {
+    color: #ef4444;
+    margin-left: 2px;
+}
+
+.bd-field label.disabled-label {
+    color: #9ca3af;
+}
+
+/* ---------- Form actions ---------- */
+.bd-form-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #f3f4f6;
+}
+
+/* ---------- Table ---------- */
+.bd-table-wrap {
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+/* ---------- Detail card ---------- */
+.bd-detail-card {
+    width: 100%;
+}
+
+.bd-detail-card.danger-border {
+    border: none;
+}
+
+.bd-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+
+.bd-detail-row {
+    display: flex;
+    flex-direction: column;
+    padding: 0.625rem 0.75rem 0.625rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.bd-detail-row:nth-child(even) {
+    padding-left: 1.5rem;
+    border-left: 1px solid #f3f4f6;
+}
+
+.bd-detail-row dt {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.25rem;
+}
+
+.bd-detail-row dd {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: #111827;
+}
+
+.bd-detail-row.full {
+    grid-column: 1 / -1;
+    padding-left: 0;
+    border-left: none;
+}
+
+/* ---------- Loading / empty ---------- */
+.bd-loading,
+.bd-empty {
+    text-align: center;
+    padding: 2.5rem 0;
+    color: #9ca3af;
+}
+
+/* ============================================================
+   Card list (ListView)
+   ============================================================ */
+
+.bd-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.bd-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f0ede8;
+    cursor: pointer;
+    transition: background 0.12s;
+}
+
+.bd-card:last-child {
+    border-bottom: none;
+}
+
+.bd-card:hover {
+    background: #faf9f7;
+}
+
+/* Thumbnail */
+.bd-card-img {
+    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #e5e7eb;
+}
+
+.bd-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bd-card-img-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #d1d5db;
+}
+
+/* Text content */
+.bd-card-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.bd-card-name {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bd-card-meta {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: #6b7280;
+}
+
+.bd-card-price {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: #374151;
+}
+
+.bd-card-footer {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2px;
+}
+
+.bd-card-time {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+/* ---------- Badges ---------- */
+.bd-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.bd-badge-accepted {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.bd-badge-rejected {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.bd-badge-pending {
+    background: #f3f4f6;
+    color: #6b7280;
+}
