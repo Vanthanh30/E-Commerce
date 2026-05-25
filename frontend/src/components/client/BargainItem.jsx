@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { assetUrl, currency, dateTime } from "../utils/formatters";
+import { assetUrl, currency, dateTime } from "../../utils/formatters";
 
 const BargainItem = ({ item }) => {
   const getStatusBadge = (status) => {

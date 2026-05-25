@@ -1,5 +1,5 @@
 import React from "react";
-import { assetUrl, currency } from "../utils/formatters";
+import { assetUrl, currency } from "../../utils/formatters";
 
 const CheckoutItem = ({ item }) => {
   return (

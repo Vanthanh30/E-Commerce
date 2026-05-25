@@ -1,5 +1,5 @@
 import React from "react";
-import { assetUrl, currency, dateTime } from "../utils/formatters";
+import { assetUrl, currency, dateTime } from "../../utils/formatters";
 
 const OrderItem = ({ item }) => {
   const getStatusBadge = (status) => {

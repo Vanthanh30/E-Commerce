@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOrders } from "../../../hooks/useOrders";
-import OrderItem from "../../../components/OrderItem"; // Import Component vừa tạo
+import OrderItem from "../../../components/client/OrderItem"; // Import Component vừa tạo
 import "../../../assets/history-list.css";
 
 const Orders = () => {

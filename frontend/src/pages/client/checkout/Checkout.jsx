@@ -1,7 +1,7 @@
 import React from "react";
 import { currency } from "../../../utils/formatters";
 import { useCheckout } from "../../../hooks/useCheckout";
-import CheckoutItem from "../../../components/CheckoutItem";
+import CheckoutItem from "../../../components/client/CheckoutItem";
 import "./checkout.css";
 
 const Checkout = () => {

@@ -37,11 +37,11 @@ apiClient.interceptors.response.use(
 
 // 4. Giữ nguyên object `api` để gọi cho gọn (giống hệt cấu trúc code cũ của bạn)
 export const api = {
-  get: (path) => apiClient.get(path),
-  post: (path, body) => apiClient.post(path, body),
-  put: (path, body) => apiClient.put(path, body),
-  patch: (path, body) => apiClient.patch(path, body),
-  delete: (path) => apiClient.delete(path),
+  get: (path, config) => apiClient.get(path, config),
+  post: (path, body, config) => apiClient.post(path, body, config),
+  put: (path, body, config) => apiClient.put(path, body, config),
+  patch: (path, body, config) => apiClient.patch(path, body, config),
+  delete: (path, config) => apiClient.delete(path, config),
 };
 
 export default apiClient;

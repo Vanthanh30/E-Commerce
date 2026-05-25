@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { assetUrl, currency } from "../utils/formatters";
+import { assetUrl, currency } from "../../utils/formatters";
 
 const ProductCard = ({ item }) => {
   return (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Plus, ArrowLeft, Save, Trash2, Edit } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./AdminProductList.css";
 
 import { productService } from "../../../services/admin/productService";
@@ -46,7 +47,6 @@ async function apiGetDanhMuc() {
     }));
 }
 
-/* ── Helpers ─────────────────────────────────────────────── */
 const fmt = (v) =>
     v != null ? Number(v).toLocaleString("vi-VN") + " VNĐ" : "—";
 
@@ -87,7 +87,6 @@ function ListView({ onCreate, onEdit, onDetails }) {
 
     return (
         <div className="pl-wrapper">
-            {/* Header */}
             <div className="pl-page-header">
                 <div>
                     <h1>Quản lý Sản phẩm</h1>
@@ -100,7 +99,6 @@ function ListView({ onCreate, onEdit, onDetails }) {
 
             {error && <div className="pl-alert pl-alert-danger">{error}</div>}
 
-            {/* Filter tabs */}
             <div className="pl-filter-tabs">
                 {FILTER_TABS.map((tab) => (
                     <button
@@ -113,7 +111,6 @@ function ListView({ onCreate, onEdit, onDetails }) {
                 ))}
             </div>
 
-            {/* Table */}
             {loading ? (
                 <div className="pl-loading">Đang tải...</div>
             ) : (
@@ -133,9 +130,7 @@ function ListView({ onCreate, onEdit, onDetails }) {
                         <tbody>
                             {filtered.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="pl-empty">
-                                        Chưa có sản phẩm
-                                    </td>
+                                    <td colSpan={7} className="pl-empty">Chưa có sản phẩm</td>
                                 </tr>
                             ) : (
                                 filtered.map((item) => {
@@ -146,11 +141,7 @@ function ListView({ onCreate, onEdit, onDetails }) {
                                             : `/Uploads/${item.hinhAnh}`
                                         : DEFAULT_IMG;
                                     return (
-                                        <tr
-                                            key={item.idSP}
-                                            className="pl-row"
-                                            onClick={() => onEdit(item.idSP)}
-                                        >
+                                        <tr key={item.idSP} className="pl-row" onClick={() => onEdit(item.idSP)}>
                                             <td>
                                                 <div className="pl-table-product">
                                                     <img src={imgUrl} alt={item.tenSanPham} />
@@ -174,10 +165,7 @@ function ListView({ onCreate, onEdit, onDetails }) {
                                             <td>
                                                 <button
                                                     className="pl-link-btn"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onEdit(item.idSP);
-                                                    }}
+                                                    onClick={(e) => { e.stopPropagation(); onEdit(item.idSP); }}
                                                 >
                                                     Sửa
                                                 </button>
@@ -193,7 +181,6 @@ function ListView({ onCreate, onEdit, onDetails }) {
 
             <p className="pl-count">Hiển thị {filtered.length} sản phẩm</p>
 
-            {/* Stats */}
             <div className="pl-stats">
                 <div className="pl-stat-card">
                     <label>Giá trị kho hàng</label>
@@ -213,16 +200,11 @@ function ListView({ onCreate, onEdit, onDetails }) {
 }
 
 /* ════════════════════════════════════════════════════════════
-   Shared form fields config
+   Shared
    ════════════════════════════════════════════════════════════ */
 const EMPTY_FORM = {
-    tenSanPham: "",
-    idDanhMuc: "",
-    giaCoDinh: "",
-    giaThapNhat: "",
-    SoLuongCon: "",
-    moTa: "",
-    hinhAnh: "",
+    tenSanPham: "", idDanhMuc: "", giaCoDinh: "",
+    giaThapNhat: "", SoLuongCon: "", moTa: "", hinhAnh: "",
 };
 
 function useCategories() {
@@ -303,30 +285,20 @@ function CreateView({ onBack }) {
             </div>
 
             <div className="pl-form-card">
-                {errors._global && (
-                    <div className="pl-alert pl-alert-danger">{errors._global}</div>
-                )}
+                {errors._global && <div className="pl-alert pl-alert-danger">{errors._global}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="pl-form-grid">
-                        {/* Tên */}
                         <div className="pl-field">
                             <label>Tên sản phẩm <span className="req">*</span></label>
-                            <input
-                                type="text" name="tenSanPham" placeholder="Nhập tên sản phẩm"
+                            <input type="text" name="tenSanPham" placeholder="Nhập tên sản phẩm"
                                 className={errors.tenSanPham ? "is-invalid" : ""}
-                                value={form.tenSanPham} onChange={handleChange}
-                            />
+                                value={form.tenSanPham} onChange={handleChange} />
                             {errors.tenSanPham && <div className="invalid-feedback">{errors.tenSanPham}</div>}
                         </div>
-
-                        {/* Danh mục */}
                         <div className="pl-field">
                             <label>Danh mục <span className="req">*</span></label>
-                            <select
-                                name="idDanhMuc"
-                                className={errors.idDanhMuc ? "is-invalid" : ""}
-                                value={form.idDanhMuc} onChange={handleChange}
-                            >
+                            <select name="idDanhMuc" className={errors.idDanhMuc ? "is-invalid" : ""}
+                                value={form.idDanhMuc} onChange={handleChange}>
                                 <option value="">Chọn danh mục</option>
                                 {categories.map((c) => (
                                     <option key={c.idDanhMuc} value={c.idDanhMuc}>{c.tenDanhMuc}</option>
@@ -334,63 +306,40 @@ function CreateView({ onBack }) {
                             </select>
                             {errors.idDanhMuc && <div className="invalid-feedback">{errors.idDanhMuc}</div>}
                         </div>
-
-                        {/* Giá cố định */}
                         <div className="pl-field">
                             <label>Giá cố định <span className="req">*</span></label>
-                            <input
-                                type="number" name="giaCoDinh" min="0" step="1000" placeholder="0"
+                            <input type="number" name="giaCoDinh" min="0" step="1000" placeholder="0"
                                 className={errors.giaCoDinh ? "is-invalid" : ""}
-                                value={form.giaCoDinh} onChange={handleChange}
-                            />
+                                value={form.giaCoDinh} onChange={handleChange} />
                             {errors.giaCoDinh && <div className="invalid-feedback">{errors.giaCoDinh}</div>}
                         </div>
-
-                        {/* Giá sàn */}
                         <div className="pl-field">
                             <label>Giá thấp nhất</label>
-                            <input
-                                type="number" name="giaThapNhat" min="0" step="1000" placeholder="0"
-                                value={form.giaThapNhat} onChange={handleChange}
-                            />
+                            <input type="number" name="giaThapNhat" min="0" step="1000" placeholder="0"
+                                value={form.giaThapNhat} onChange={handleChange} />
                         </div>
-
-                        {/* Số lượng */}
                         <div className="pl-field">
                             <label>Số lượng còn <span className="req">*</span></label>
-                            <input
-                                type="number" name="SoLuongCon" min="0" step="1" placeholder="0"
+                            <input type="number" name="SoLuongCon" min="0" step="1" placeholder="0"
                                 className={errors.SoLuongCon ? "is-invalid" : ""}
-                                value={form.SoLuongCon} onChange={handleChange}
-                            />
+                                value={form.SoLuongCon} onChange={handleChange} />
                             {errors.SoLuongCon && <div className="invalid-feedback">{errors.SoLuongCon}</div>}
                         </div>
-
-                        {/* Hình ảnh */}
                         <div className="pl-field">
                             <label>Hình ảnh</label>
-                            {preview && (
-                                <img src={preview} alt="preview" className="pl-img-preview" />
-                            )}
-                            <input
-                                ref={fileRef} type="file" accept="image/*"
-                                onChange={handleFile}
-                            />
+                            {preview && <img src={preview} alt="preview" className="pl-img-preview" />}
+                            <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} />
                         </div>
-
-                        {/* Mô tả */}
                         <div className="pl-field pl-field-full">
                             <label>Mô tả</label>
-                            <textarea
-                                name="moTa" rows={4} placeholder="Nhập mô tả sản phẩm"
-                                value={form.moTa} onChange={handleChange}
-                            />
+                            <textarea name="moTa" rows={4} placeholder="Nhập mô tả sản phẩm"
+                                value={form.moTa} onChange={handleChange} />
                         </div>
                     </div>
-
                     <div className="pl-form-actions">
                         <button type="button" className="btn btn-ghost" onClick={onBack}>Hủy</button>
-                        <button type="submit" className="btn btn-primary" disabled={submitting} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <button type="submit" className="btn btn-primary" disabled={submitting}
+                            style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             {submitting ? "Đang lưu..." : <><Plus size={16} /> Thêm mới</>}
                         </button>
                     </div>
@@ -507,29 +456,20 @@ function EditView({ productId, onBack }) {
             </div>
 
             <div className="pl-form-card">
-                {errors._global && (
-                    <div className="pl-alert pl-alert-danger">{errors._global}</div>
-                )}
+                {errors._global && <div className="pl-alert pl-alert-danger">{errors._global}</div>}
                 <form onSubmit={handleUpdate}>
                     <div className="pl-form-grid">
-                        {/* Mã SP - disabled */}
                         <div className="pl-field">
                             <label>Mã sản phẩm</label>
                             <input type="text" value={form.idSP ?? ""} disabled />
                         </div>
-
-                        {/* Tên */}
                         <div className="pl-field">
                             <label>Tên sản phẩm <span className="req">*</span></label>
-                            <input
-                                type="text" name="tenSanPham" placeholder="Nhập tên sản phẩm"
+                            <input type="text" name="tenSanPham" placeholder="Nhập tên sản phẩm"
                                 className={errors.tenSanPham ? "is-invalid" : ""}
-                                value={form.tenSanPham ?? ""} onChange={handleChange}
-                            />
+                                value={form.tenSanPham ?? ""} onChange={handleChange} />
                             {errors.tenSanPham && <div className="invalid-feedback">{errors.tenSanPham}</div>}
                         </div>
-
-                        {/* Danh mục */}
                         <div className="pl-field">
                             <label>Danh mục</label>
                             <select name="idDanhMuc" value={form.idDanhMuc ?? ""} onChange={handleChange}>
@@ -539,92 +479,61 @@ function EditView({ productId, onBack }) {
                                 ))}
                             </select>
                         </div>
-
-                        {/* Số lượng */}
                         <div className="pl-field">
                             <label>Số lượng còn <span className="req">*</span></label>
-                            <input
-                                type="number" name="SoLuongCon" min="0" step="1" placeholder="0"
+                            <input type="number" name="SoLuongCon" min="0" step="1" placeholder="0"
                                 className={errors.SoLuongCon ? "is-invalid" : ""}
-                                value={form.SoLuongCon ?? ""} onChange={handleChange}
-                            />
+                                value={form.SoLuongCon ?? ""} onChange={handleChange} />
                             {errors.SoLuongCon && <div className="invalid-feedback">{errors.SoLuongCon}</div>}
                         </div>
-
-                        {/* Giá cố định */}
                         <div className="pl-field">
                             <label>Giá cố định <span className="req">*</span></label>
-                            <input
-                                type="number" name="giaCoDinh" min="0" step="1000" placeholder="0"
+                            <input type="number" name="giaCoDinh" min="0" step="1000" placeholder="0"
                                 className={errors.giaCoDinh ? "is-invalid" : ""}
-                                value={form.giaCoDinh ?? ""} onChange={handleChange}
-                            />
+                                value={form.giaCoDinh ?? ""} onChange={handleChange} />
                             {errors.giaCoDinh && <div className="invalid-feedback">{errors.giaCoDinh}</div>}
                         </div>
-
-                        {/* Giá sàn */}
                         <div className="pl-field">
                             <label>Giá thấp nhất</label>
-                            <input
-                                type="number" name="giaThapNhat" min="0" step="1000" placeholder="0"
-                                value={form.giaThapNhat ?? ""} onChange={handleChange}
-                            />
+                            <input type="number" name="giaThapNhat" min="0" step="1000" placeholder="0"
+                                value={form.giaThapNhat ?? ""} onChange={handleChange} />
                         </div>
-
-                        {/* Mô tả */}
                         <div className="pl-field pl-field-full">
                             <label>Mô tả</label>
-                            <textarea
-                                name="moTa" rows={4} placeholder="Nhập mô tả sản phẩm"
-                                value={form.moTa ?? ""} onChange={handleChange}
-                            />
+                            <textarea name="moTa" rows={4} placeholder="Nhập mô tả sản phẩm"
+                                value={form.moTa ?? ""} onChange={handleChange} />
                         </div>
-
-                        {/* Hình ảnh */}
                         <div className="pl-field pl-field-full">
                             <label>Hình ảnh</label>
                             <img src={imgSrc} alt={form.tenSanPham} className="pl-img-preview" />
                             <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} />
                         </div>
                     </div>
-
                     <div className="pl-form-actions">
                         <button type="button" className="btn btn-ghost" onClick={onBack}>Hủy</button>
-                        <button type="submit" className="btn btn-primary" disabled={submitting} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <button type="submit" className="btn btn-primary" disabled={submitting}
+                            style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             {submitting ? "Đang lưu..." : <><Save size={16} /> Cập nhật</>}
                         </button>
                     </div>
                 </form>
             </div>
 
-            {/* Danger zone */}
             <div className="pl-danger-panel">
                 <h2>Xoá sản phẩm</h2>
                 <p>Sản phẩm sẽ được ẩn khỏi danh sách bán hàng nhưng dữ liệu liên quan vẫn được giữ lại.</p>
                 {!showDeleteConfirm ? (
-                    <button
-                        className="btn btn-danger"
-                        onClick={() => setShowDeleteConfirm(true)}
-                        style={{ display: "flex", alignItems: "center", gap: "6px" }}
-                    >
+                    <button className="btn btn-danger" onClick={() => setShowDeleteConfirm(true)}
+                        style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                         <Trash2 size={16} /> Xoá sản phẩm
                     </button>
                 ) : (
                     <div className="pl-confirm-delete">
                         <span>Bạn có chắc chắn muốn xoá?</span>
-                        <button
-                            className="btn btn-danger"
-                            onClick={handleDelete}
-                            disabled={deleting}
-                        >
+                        <button className="btn btn-danger" onClick={handleDelete} disabled={deleting}>
                             {deleting ? "Đang xoá..." : "Xác nhận xoá"}
                         </button>
-                        <button
-                            className="btn btn-ghost"
-                            onClick={() => setShowDeleteConfirm(false)}
-                        >
-                            Huỷ
-                        </button>
+                        <button className="btn btn-ghost" onClick={() => setShowDeleteConfirm(false)}>Huỷ</button>
                     </div>
                 )}
             </div>
@@ -659,20 +568,15 @@ function DetailsView({ productId, onBack, onEdit }) {
         ? (product.hinhAnh.startsWith("http") ? product.hinhAnh : `/Uploads/${product.hinhAnh}`)
         : DEFAULT_IMG;
 
-    const rows = product
-        ? [
-            { label: "Tên sản phẩm", value: product.tenSanPham },
-            { label: "Danh mục", value: product.danhMuc?.tenDanhMuc ?? product.idDanhMuc ?? "—" },
-            { label: "Giá cố định", value: fmt(product.giaCoDinh) },
-            { label: "Giá thấp nhất", value: fmt(product.giaThapNhat) },
-            { label: "Số lượng còn", value: product.SoLuongCon ?? 0 },
-            { label: "Mô tả", value: product.moTa || "—" },
-            {
-                label: "Trạng thái",
-                value: product.trangThai === 1 ? "Đang bán" : "Lưu nháp",
-            },
-        ]
-        : [];
+    const rows = product ? [
+        { label: "Tên sản phẩm", value: product.tenSanPham },
+        { label: "Danh mục", value: product.danhMuc?.tenDanhMuc ?? product.idDanhMuc ?? "—" },
+        { label: "Giá cố định", value: fmt(product.giaCoDinh) },
+        { label: "Giá thấp nhất", value: fmt(product.giaThapNhat) },
+        { label: "Số lượng còn", value: product.SoLuongCon ?? 0 },
+        { label: "Mô tả", value: product.moTa || "—" },
+        { label: "Trạng thái", value: product.trangThai === 1 ? "Đang bán" : "Lưu nháp" },
+    ] : [];
 
     return (
         <div className="pl-wrapper">
@@ -680,11 +584,13 @@ function DetailsView({ productId, onBack, onEdit }) {
                 <div className="pl-sub-header-row">
                     <h1>Chi tiết sản phẩm</h1>
                     <div style={{ display: "flex", gap: "0.5rem" }}>
-                        <button className="btn btn-outline" onClick={onBack} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <button className="btn btn-outline" onClick={onBack}
+                            style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <ArrowLeft size={16} /> Quay lại
                         </button>
                         {product && (
-                            <button className="btn btn-primary" onClick={() => onEdit(productId)} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <button className="btn btn-primary" onClick={() => onEdit(productId)}
+                                style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                 <Edit size={16} /> Sửa
                             </button>
                         )}
@@ -720,58 +626,35 @@ function DetailsView({ productId, onBack, onEdit }) {
    MAIN — AdminProductList
    ════════════════════════════════════════════════════════════ */
 const AdminProductList = () => {
-    // view: "list" | "create" | "edit" | "details"
     const [view, setView] = useState("list");
     const [selectedId, setSelectedId] = useState(null);
 
-    const goList = () => {
-        setView("list");
-        setSelectedId(null);
-    };
+    const location = useLocation();
+    const navigate = useNavigate();
 
-    const goCreate = () => {
-        setView("create");
-        setSelectedId(null);
-    };
+    // Đọc ?edit=SP001 từ URL — do SearchBar navigate sang
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const editId = params.get("edit");
+        if (editId) {
+            setSelectedId(editId);
+            setView("edit");
+            // Xóa query param khỏi URL sau khi đọc xong
+            navigate("/admin/products", { replace: true });
+        }
+    }, [location.search]);
 
-    const goEdit = (id) => {
-        setView("edit");
-        setSelectedId(id);
-    };
-
-    const goDetails = (id) => {
-        setView("details");
-        setSelectedId(id);
-    };
+    const goList = () => { setView("list"); setSelectedId(null); };
+    const goCreate = () => { setView("create"); setSelectedId(null); };
+    const goEdit = (id) => { setView("edit"); setSelectedId(id); };
+    const goDetails = (id) => { setView("details"); setSelectedId(id); };
 
     return (
         <div className="container-fluid p-0">
-            {view === "list" && (
-                <ListView
-                    onCreate={goCreate}
-                    onEdit={goEdit}
-                    onDetails={goDetails}
-                />
-            )}
-
-            {view === "create" && (
-                <CreateView onBack={goList} />
-            )}
-
-            {view === "edit" && (
-                <EditView
-                    productId={selectedId}
-                    onBack={goList}
-                />
-            )}
-
-            {view === "details" && (
-                <DetailsView
-                    productId={selectedId}
-                    onBack={goList}
-                    onEdit={goEdit}
-                />
-            )}
+            {view === "list" && <ListView onCreate={goCreate} onEdit={goEdit} onDetails={goDetails} />}
+            {view === "create" && <CreateView onBack={goList} />}
+            {view === "edit" && <EditView productId={selectedId} onBack={goList} />}
+            {view === "details" && <DetailsView productId={selectedId} onBack={goList} onEdit={goEdit} />}
         </div>
     );
 };

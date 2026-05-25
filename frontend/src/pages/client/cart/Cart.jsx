@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { currency } from "../../../utils/formatters";
 // Sử dụng Hook và Component đã tách
 import { useCart } from "../../../hooks/useCart";
-import CartItem from "../../../components/CartItem";
+import CartItem from "../../../components/client/CartItem";
 import "./cart.css";
 
 const Cart = () => {
