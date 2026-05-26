@@ -13,7 +13,8 @@ export const useBargains = () => {
       if (!user || !user.customerId) return;
 
       const response = await bargainService.getBargains(user.customerId);
-      setBargains(response.data || response || []);
+      // API interceptor trả về data trực tiếp, không cần .data
+      setBargains(Array.isArray(response) ? response : []);
     } catch (err) {
       setError(err.message || "Lỗi khi tải lịch sử thương lượng.");
     } finally {

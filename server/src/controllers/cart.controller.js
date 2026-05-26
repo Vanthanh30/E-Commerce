@@ -1,7 +1,28 @@
 import CartItem from "../models/cartItem.model.js";
 import Product from "../models/product.model.js";
+import mongoose from "mongoose";
+
+let cartIndexesReady = false;
+
+async function ensureCartIndexes() {
+  if (cartIndexesReady) return;
+
+  try {
+    await CartItem.collection.dropIndex("customerId_1_productId_1");
+  } catch (err) {
+    if (err.codeName !== "IndexNotFound" && err.code !== 27) throw err;
+  }
+
+  await CartItem.collection.createIndex(
+    { customerId: 1, productId: 1, salePrice: 1 },
+    { unique: true }
+  );
+
+  cartIndexesReady = true;
+}
 
 async function getCartItems(customerId) {
+  await ensureCartIndexes();
   const cart = await CartItem.find({ customerId }).sort({ updatedAt: -1 }).lean();
   const productIds = cart.map((item) => item.productId);
   const products = await Product.find({ productId: { $in: productIds } }).lean();
@@ -9,15 +30,21 @@ async function getCartItems(customerId) {
 
   return cart.map((item) => {
     const product = productMap.get(item.productId) || {};
+    const price = item.salePrice ?? product.fixedPrice ?? 0;
     return {
+      cartItemId: String(item._id),
       customerId: item.customerId,
       productId: item.productId,
       quantity: item.quantity,
       productName: product.name || "",
-      price: product.fixedPrice || 0,
+      name: product.name || "",
+      price,
+      fixedPrice: product.fixedPrice || 0,
+      salePrice: item.salePrice,
+      priceType: item.salePrice == null ? "fixed" : "bargain",
       imageUrl: product.imageUrl || "",
       stock: product.stock || 0,
-      total: Number(product.fixedPrice || 0) * Number(item.quantity || 0)
+      total: Number(price || 0) * Number(item.quantity || 0)
     };
   });
 }
@@ -27,9 +54,11 @@ export async function listCart(req, res) {
 }
 
 export async function addToCart(req, res) {
+  await ensureCartIndexes();
   const customerId = req.body.customerId;
   const productId = req.body.productId;
   const quantity = Number(req.body.quantity || 1);
+  const salePrice = req.body.price == null ? null : Number(req.body.price);
   const product = await Product.findOne({ productId, status: 1 }).lean();
 
   if (!product) {
@@ -37,7 +66,8 @@ export async function addToCart(req, res) {
     return;
   }
 
-  const existing = await CartItem.findOne({ customerId, productId });
+  const normalizedSalePrice = salePrice != null && salePrice > 0 ? salePrice : null;
+  const existing = await CartItem.findOne({ customerId, productId, salePrice: normalizedSalePrice });
   if (existing) {
     existing.quantity = Math.min(existing.quantity + quantity, product.stock || existing.quantity + quantity);
     await existing.save();
@@ -45,7 +75,8 @@ export async function addToCart(req, res) {
     await CartItem.create({
       customerId,
       productId,
-      quantity: Math.min(quantity, product.stock || quantity)
+      quantity: Math.min(quantity, product.stock || quantity),
+      salePrice: normalizedSalePrice
     });
   }
 
@@ -53,14 +84,24 @@ export async function addToCart(req, res) {
 }
 
 export async function updateCartItem(req, res) {
-  const product = await Product.findOne({ productId: req.params.productId }).lean();
+  await ensureCartIndexes();
+  const itemFilter = mongoose.Types.ObjectId.isValid(req.params.productId)
+    ? { _id: req.params.productId, customerId: req.params.customerId }
+    : { customerId: req.params.customerId, productId: req.params.productId };
+  const cartItem = await CartItem.findOne(itemFilter).lean();
+  if (!cartItem) {
+    res.status(404).json({ message: "Cart item not found" });
+    return;
+  }
+
+  const product = await Product.findOne({ productId: cartItem.productId }).lean();
   const quantity = Math.min(
     Math.max(1, Number(req.body.quantity || 1)),
     Number(product?.stock || req.body.quantity || 1)
   );
 
   await CartItem.updateOne(
-    { customerId: req.params.customerId, productId: req.params.productId },
+    { _id: cartItem._id },
     { $set: { quantity } }
   );
 
@@ -68,10 +109,12 @@ export async function updateCartItem(req, res) {
 }
 
 export async function deleteCartItem(req, res) {
-  await CartItem.deleteOne({
-    customerId: req.params.customerId,
-    productId: req.params.productId
-  });
+  await ensureCartIndexes();
+  const itemFilter = mongoose.Types.ObjectId.isValid(req.params.productId)
+    ? { _id: req.params.productId, customerId: req.params.customerId }
+    : { customerId: req.params.customerId, productId: req.params.productId };
+
+  await CartItem.deleteOne(itemFilter);
 
   res.json(await getCartItems(req.params.customerId));
 }

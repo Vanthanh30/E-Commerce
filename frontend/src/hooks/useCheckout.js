@@ -86,7 +86,7 @@ export const useCheckout = () => {
 
   const calculateTotal = () => {
     return cartItems.reduce(
-      (sum, item) => sum + (item.fixedPrice || item.price || 0) * item.quantity,
+      (sum, item) => sum + (item.price || item.fixedPrice || 0) * item.quantity,
       0,
     );
   };

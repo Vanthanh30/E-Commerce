@@ -35,7 +35,8 @@ export const useCart = () => {
     if (newQty < 1) return;
 
     try {
-      await cartService.updateQuantity(productId, newQty);
+      const user = JSON.parse(sessionStorage.getItem("user"));
+      await cartService.updateQuantity(user.customerId, productId, newQty);
       setCartItems((prev) =>
         prev.map((item) =>
           item.productId === productId ? { ...item, quantity: newQty } : item,
@@ -49,7 +50,8 @@ export const useCart = () => {
   const removeItem = async (productId) => {
     if (!window.confirm("Xóa sản phẩm khỏi giỏ hàng?")) return;
     try {
-      await cartService.removeItem(productId);
+      const user = JSON.parse(sessionStorage.getItem("user"));
+      await cartService.removeItem(user.customerId, productId);
       setCartItems((prev) =>
         prev.filter((item) => item.productId !== productId),
       );
@@ -60,7 +62,7 @@ export const useCart = () => {
 
   const calculateTotal = () => {
     return cartItems.reduce(
-      (sum, item) => sum + (item.fixedPrice || item.price || 0) * item.quantity,
+      (sum, item) => sum + (item.price || item.fixedPrice || 0) * item.quantity,
       0,
     );
   };
