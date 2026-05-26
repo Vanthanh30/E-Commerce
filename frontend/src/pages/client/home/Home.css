@@ -411,3 +411,9 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+.nav-arrows button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: var(--border);
+}

@@ -14,6 +14,7 @@ import Cart from "./pages/client/cart/Cart";
 import Checkout from "./pages/client/checkout/Checkout";
 import Orders from "./pages/client/orders/Orders";
 import Bargains from "./pages/client/bargains/Bargains";
+import ClientProducts from "./pages/client/products/ClientProducts";
 
 // Admin Pages
 import AdminProductList from "./pages/admin/products/AdminProductList";
@@ -40,6 +41,7 @@ function App() {
         <Route path="checkout" element={<Checkout />} />
         <Route path="orders" element={<Orders />} />
         <Route path="bargains" element={<Bargains />} />
+        <Route path="products" element={<ClientProducts />} />
       </Route>
 
       {/* Admin */}

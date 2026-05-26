@@ -4,12 +4,18 @@ import { uploadImageBuffer } from "../helpers/cloudinary.helper.js";
 import { nextCode } from "../helpers/id.helper.js";
 
 async function attachCategoryName(products) {
-  const categoryIds = [...new Set(products.map((item) => item.categoryId).filter(Boolean))];
-  const categories = await Category.find({ categoryId: { $in: categoryIds } }).lean();
-  const categoryMap = new Map(categories.map((item) => [item.categoryId, item.name]));
+  const categoryIds = [
+    ...new Set(products.map((item) => item.categoryId).filter(Boolean)),
+  ];
+  const categories = await Category.find({
+    categoryId: { $in: categoryIds },
+  }).lean();
+  const categoryMap = new Map(
+    categories.map((item) => [item.categoryId, item.name]),
+  );
   return products.map((item) => ({
     ...item,
-    categoryName: categoryMap.get(item.categoryId) || ""
+    categoryName: categoryMap.get(item.categoryId) || "",
   }));
 }
 
@@ -24,7 +30,12 @@ export async function listProducts(req, res) {
 }
 
 export async function getProduct(req, res) {
-  const product = await Product.findOne({ productId: req.params.id }).lean();
+  const product = await Product.findOneAndUpdate(
+    { productId: req.params.id },
+    { $inc: { views: 1 } },
+    { new: true },
+  ).lean();
+
   if (!product) {
     res.status(404).json({ message: "Product not found" });
     return;
@@ -32,6 +43,15 @@ export async function getProduct(req, res) {
 
   const [result] = await attachCategoryName([product]);
   res.json(result);
+}
+
+export async function getTrendingProducts(req, res) {
+  const products = await Product.find({ status: 1 })
+    .sort({ views: -1 })
+    .limit(10)
+    .lean();
+
+  res.json(await attachCategoryName(products));
 }
 
 export async function createProduct(req, res) {
@@ -47,7 +67,7 @@ export async function createProduct(req, res) {
     imageUrl: uploaded?.url || req.body.imageUrl || "",
     cloudinaryPublicId: uploaded?.publicId || "",
     description: req.body.description || "",
-    status: 1
+    status: 1,
   });
 
   res.status(201).json({ productId: product.productId });
@@ -61,7 +81,7 @@ export async function updateProduct(req, res) {
     fixedPrice: Number(req.body.fixedPrice || 0),
     minPrice: Number(req.body.minPrice || 0),
     stock: Number(req.body.stock || 0),
-    description: req.body.description || ""
+    description: req.body.description || "",
   };
 
   if (uploaded) {
@@ -78,7 +98,7 @@ export async function updateProduct(req, res) {
 export async function deleteProduct(req, res) {
   await Product.updateOne(
     { productId: req.params.id },
-    { $set: { status: 0 } }
+    { $set: { status: 0 } },
   );
 
   res.json({ message: "Product hidden" });
