@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useBargains } from "../../../hooks/useBargains";
 import BargainChat from "../../../components/client/BargainChat";
@@ -19,6 +19,8 @@ const Bargains = () => {
   const [creatingBargain, setCreatingBargain] = useState(false);
   const [notice, setNotice] = useState("");
 
+  const isCreatingRef = useRef(false);
+
   const productIdFromUrl = searchParams.get("product");
 
   useEffect(() => {
@@ -29,10 +31,13 @@ const Bargains = () => {
     const ensureBargainSession = async () => {
       if (!productIdFromUrl) return;
 
+      if (isCreatingRef.current) return;
+
       const userStr = sessionStorage.getItem("user");
       if (!userStr) return;
 
       try {
+        isCreatingRef.current = true;
         setNotice("");
         setCreatingBargain(true);
         const user = JSON.parse(userStr);
@@ -43,11 +48,20 @@ const Bargains = () => {
           quantity: 1,
         });
 
+        window.history.replaceState({}, document.title, "/bargains");
+
         await fetchBargains();
       } catch (err) {
-        setNotice(err.message || "Lỗi khi tạo phiên thương lượng");
+        if (
+          !err.message?.includes("Bargain session expired") &&
+          !err.message?.includes("ended")
+        ) {
+          setNotice(err.message || "Lỗi khi tạo phiên thương lượng");
+        }
+        await fetchBargains();
       } finally {
         setCreatingBargain(false);
+        isCreatingRef.current = false;
       }
     };
 
@@ -144,7 +158,6 @@ const Bargains = () => {
 
   return (
     <div className="history-container page-container">
-      {/* TIÊU ĐỀ CHUẨN CỦA TRANG NÀY ĐÂY */}
       <h1 className="page-title" style={{ marginBottom: "32px" }}>
         Thương lượng giá
       </h1>

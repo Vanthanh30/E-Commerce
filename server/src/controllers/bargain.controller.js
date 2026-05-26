@@ -28,9 +28,9 @@ async function markExpiredBargains(filter = {}) {
     {
       ...filter,
       status: "negotiating",
-      expiredAt: { $lt: new Date() }
+      expiredAt: { $lt: new Date() },
     },
-    { $set: { status: "expired" } }
+    { $set: { status: "expired" } },
   );
 }
 
@@ -42,7 +42,11 @@ async function makeBargainId(customerId, productId) {
 }
 
 function lastDetail(bargain) {
-  return [...(bargain?.details || [])].sort((a, b) => Number(b.round) - Number(a.round))[0] || null;
+  return (
+    [...(bargain?.details || [])].sort(
+      (a, b) => Number(b.round) - Number(a.round),
+    )[0] || null
+  );
 }
 
 async function bargainRows({ customerId = null, id = null } = {}) {
@@ -55,77 +59,92 @@ async function bargainRows({ customerId = null, id = null } = {}) {
   const customerIds = [...new Set(bargains.map((item) => item.customerId))];
   const [products, customers] = await Promise.all([
     Product.find({ productId: { $in: productIds } }).lean(),
-    Customer.find({ customerId: { $in: customerIds } }).lean()
+    Customer.find({ customerId: { $in: customerIds } }).lean(),
   ]);
   const productMap = new Map(products.map((item) => [item.productId, item]));
   const customerMap = new Map(customers.map((item) => [item.customerId, item]));
 
-  return bargains.flatMap((bargain) => {
-    const product = productMap.get(bargain.productId) || {};
-    const customer = customerMap.get(bargain.customerId) || {};
-    const baseRow = {
-      bargainId: bargain.bargainId,
-      productName: product.name || "",
-      imageUrl: product.imageUrl || "",
-      customerId: bargain.customerId,
-      listedPrice: product.fixedPrice || 0,
-      minPrice: product.minPrice || 0,
-      quantity: bargain.quantity || 1,
-      productId: bargain.productId,
-      customerName: customer.fullName || "",
-      address: customer.address || "",
-      expiredAt: bargain.expiredAt,
-      sessionStatus: bargain.status
-    };
+  return bargains
+    .flatMap((bargain) => {
+      const product = productMap.get(bargain.productId) || {};
+      const customer = customerMap.get(bargain.customerId) || {};
+      const baseRow = {
+        bargainId: bargain.bargainId,
+        productName: product.name || "",
+        imageUrl: product.imageUrl || "",
+        customerId: bargain.customerId,
+        listedPrice: product.fixedPrice || 0,
+        minPrice: product.minPrice || 0,
+        quantity: bargain.quantity || 1,
+        productId: bargain.productId,
+        customerName: customer.fullName || "",
+        address: customer.address || "",
+        expiredAt: bargain.expiredAt,
+        sessionStatus: bargain.status,
+      };
 
-    if (!bargain.details.length) {
-      return [{
+      if (!bargain.details.length) {
+        return [
+          {
+            ...baseRow,
+            offerPrice: null,
+            botPrice: null,
+            note: "",
+            customerMessage: "",
+            botMessage: "",
+            time: bargain.updatedAt || bargain.createdAt,
+            round: 0,
+            status: bargain.status,
+            statusText:
+              bargain.status === "expired" ? "Het han" : "Dang thuong luong",
+          },
+        ];
+      }
+
+      return bargain.details.map((detail) => ({
         ...baseRow,
-        offerPrice: null,
-        botPrice: null,
-        note: "",
-        customerMessage: "",
-        botMessage: "",
-        time: bargain.updatedAt || bargain.createdAt,
-        round: 0,
-        status: bargain.status,
-        statusText: bargain.status === "expired" ? "Het han" : "Dang thuong luong"
-      }];
-    }
-
-    return bargain.details.map((detail) => ({
-      ...baseRow,
-      offerPrice: detail.customerPrice,
-      botPrice: detail.botPrice,
-      note: detail.botMessage || "",
-      customerMessage: detail.customerMessage || "",
-      botMessage: detail.botMessage || "",
-      time: detail.time,
-      quantity: detail.quantity || bargain.quantity || 1,
-      round: detail.round,
-      status: detail.status,
-      statusText: bargainStatus(detail.round, detail.status)
-    }));
-  }).sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
+        offerPrice: detail.customerPrice,
+        botPrice: detail.botPrice,
+        note: detail.botMessage || "",
+        customerMessage: detail.customerMessage || "",
+        botMessage: detail.botMessage || "",
+        time: detail.time,
+        quantity: detail.quantity || bargain.quantity || 1,
+        round: detail.round,
+        status: detail.status,
+        statusText: bargainStatus(detail.round, detail.status),
+      }));
+    })
+    .sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
 }
 
 function latestRounds(rows) {
   const grouped = new Map();
   for (const row of rows) {
     const current = grouped.get(row.bargainId);
-    if (!current || Number(row.round) > Number(current.round)) grouped.set(row.bargainId, row);
+    if (!current || Number(row.round) > Number(current.round))
+      grouped.set(row.bargainId, row);
   }
-  return [...grouped.values()].sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
+  return [...grouped.values()].sort(
+    (a, b) => new Date(b.time || 0) - new Date(a.time || 0),
+  );
 }
 
 export async function listBargains(req, res) {
   const customerId = req.query.customerId || null;
   await markExpiredBargains(customerId ? { customerId } : {});
   const rows = await bargainRows({ customerId: req.query.customerId || null });
-  const result = req.query.latest === "true" || req.query.admin === "true" ? latestRounds(rows) : rows;
-  res.json(req.query.admin === "true"
-    ? result.filter((row) => ["pending", "accepted", "rejected"].includes(row.status))
-    : result);
+  const result =
+    req.query.latest === "true" || req.query.admin === "true"
+      ? latestRounds(rows)
+      : rows;
+  res.json(
+    req.query.admin === "true"
+      ? result.filter((row) =>
+          ["pending", "accepted", "rejected"].includes(row.status),
+        )
+      : result,
+  );
 }
 
 export async function getBargain(req, res) {
@@ -148,18 +167,19 @@ export async function createBargain(req, res) {
   let bargain = await Bargain.findOne({
     customerId,
     productId,
-    status: "negotiating"
+    status: "negotiating",
   }).sort({ updatedAt: -1 });
 
   if (!bargain) {
-    const bargainId = await makeBargainId(customerId, productId);
+    const suffix = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const bargainId = `${customerId}_${productId}_${suffix}`;
     bargain = await Bargain.create({
       bargainId,
       customerId,
       productId,
       quantity,
       expiredAt: new Date(Date.now() + SESSION_MINUTES * 60 * 1000),
-      details: []
+      details: [],
     });
   }
 
@@ -179,7 +199,7 @@ export async function createBargain(req, res) {
     productId,
     quantity: bargain.quantity || quantity,
     status: bargain.status,
-    expiredAt: bargain.expiredAt
+    expiredAt: bargain.expiredAt,
   });
 }
 
@@ -189,7 +209,9 @@ export async function respondBargain(req, res) {
   const customer = bargain
     ? await Customer.findOne({ customerId: bargain.customerId }).lean()
     : null;
-  const current = bargain?.details.find((item) => Number(item.round) === currentRound);
+  const current = bargain?.details.find(
+    (item) => Number(item.round) === currentRound,
+  );
 
   if (!bargain || !current) {
     res.status(404).json({ message: "Bargain round not found" });
@@ -198,12 +220,16 @@ export async function respondBargain(req, res) {
 
   const latest = lastDetail(bargain);
   if (Number(latest?.round) !== currentRound) {
-    res.status(409).json({ message: "Only the latest bargain round can be answered" });
+    res
+      .status(409)
+      .json({ message: "Only the latest bargain round can be answered" });
     return;
   }
 
   if (current.status !== "pending") {
-    res.status(409).json({ message: "Only pending bargain rounds can be answered" });
+    res
+      .status(409)
+      .json({ message: "Only pending bargain rounds can be answered" });
     return;
   }
 
@@ -223,19 +249,26 @@ export async function respondBargain(req, res) {
       price,
       address: customer?.address || "",
       paymentMethod: 0,
-      status: 1
+      status: 1,
     });
     invoiceId = order.orderId;
   } else if (action === "reject") {
     nextStatus = "rejected";
   } else if (action === "counter") {
     if (currentRound >= MAX_BARGAIN_ROUNDS) {
-      res.status(400).json({ message: "Maximum 3 bargain rounds reached. Admin can only accept or reject" });
+      res
+        .status(400)
+        .json({
+          message:
+            "Maximum 3 bargain rounds reached. Admin can only accept or reject",
+        });
       return;
     }
     nextStatus = "countered";
   } else {
-    res.status(400).json({ message: "action must be accept, reject, or counter" });
+    res
+      .status(400)
+      .json({ message: "action must be accept, reject, or counter" });
     return;
   }
 
@@ -250,7 +283,7 @@ export async function respondBargain(req, res) {
     bargainId: req.params.id,
     round: current.round,
     statusText: bargainStatus(current.round, nextStatus),
-    invoiceId
+    invoiceId,
   });
 }
 
@@ -264,7 +297,11 @@ export async function chatBargain(req, res) {
 
   let bargain = bargainId
     ? await Bargain.findOne({ bargainId })
-    : await Bargain.findOne({ customerId, productId, status: "negotiating" }).sort({ updatedAt: -1 });
+    : await Bargain.findOne({
+        customerId,
+        productId,
+        status: "negotiating",
+      }).sort({ updatedAt: -1 });
 
   if (!bargain) {
     const nextBargainId = await makeBargainId(customerId, productId);
@@ -273,7 +310,7 @@ export async function chatBargain(req, res) {
       customerId,
       productId,
       expiredAt: new Date(Date.now() + SESSION_MINUTES * 60 * 1000),
-      details: []
+      details: [],
     });
   }
 
@@ -295,7 +332,7 @@ export async function chatBargain(req, res) {
   const result = processBargain({
     product,
     offerPrice: customerPrice,
-    round
+    round,
   });
 
   bargain.details.push({
@@ -306,7 +343,7 @@ export async function chatBargain(req, res) {
     customerMessage: "",
     botMessage: result.botMessage,
     status: result.status,
-    time: new Date()
+    time: new Date(),
   });
 
   if (isFinal(result.status)) {
@@ -321,6 +358,6 @@ export async function chatBargain(req, res) {
     status: result.status,
     customerPrice,
     botPrice: result.botPrice,
-    botMessage: result.botMessage
+    botMessage: result.botMessage,
   });
 }
