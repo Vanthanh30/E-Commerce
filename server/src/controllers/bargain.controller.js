@@ -6,6 +6,44 @@ import { bargainStatus } from "../helpers/status.helper.js";
 import { processBargain } from "../services/bargain.service.js";
 
 const MAX_BARGAIN_ROUNDS = 3;
+const SESSION_MINUTES = 20;
+
+function isFinal(status) {
+  return ["accepted", "rejected"].includes(status);
+}
+
+function isExpired(bargain) {
+  return bargain?.expiredAt && new Date() > new Date(bargain.expiredAt);
+}
+
+async function expireBargain(bargain) {
+  if (bargain.status !== "expired") {
+    bargain.status = "expired";
+    await bargain.save();
+  }
+}
+
+async function markExpiredBargains(filter = {}) {
+  await Bargain.updateMany(
+    {
+      ...filter,
+      status: "negotiating",
+      expiredAt: { $lt: new Date() }
+    },
+    { $set: { status: "expired" } }
+  );
+}
+
+async function makeBargainId(customerId, productId) {
+  const baseId = `${customerId}_${productId}`;
+  const existing = await Bargain.findOne({ bargainId: baseId }).lean();
+  const suffix = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  return existing ? `${baseId}_${suffix}` : baseId;
+}
+
+function lastDetail(bargain) {
+  return [...(bargain?.details || [])].sort((a, b) => Number(b.round) - Number(a.round))[0] || null;
+}
 
 async function bargainRows({ customerId = null, id = null } = {}) {
   const filter = {};
@@ -25,23 +63,48 @@ async function bargainRows({ customerId = null, id = null } = {}) {
   return bargains.flatMap((bargain) => {
     const product = productMap.get(bargain.productId) || {};
     const customer = customerMap.get(bargain.customerId) || {};
-    return bargain.details.map((detail) => ({
+    const baseRow = {
       bargainId: bargain.bargainId,
       productName: product.name || "",
       imageUrl: product.imageUrl || "",
       customerId: bargain.customerId,
-      offerPrice: detail.price,
-      note: detail.note,
       listedPrice: product.fixedPrice || 0,
       minPrice: product.minPrice || 0,
-      time: detail.time,
-      quantity: detail.quantity,
-      round: detail.round,
-      status: detail.status,
-      statusText: bargainStatus(detail.round, detail.status),
+      quantity: bargain.quantity || 1,
       productId: bargain.productId,
       customerName: customer.fullName || "",
-      address: customer.address || ""
+      address: customer.address || "",
+      expiredAt: bargain.expiredAt,
+      sessionStatus: bargain.status
+    };
+
+    if (!bargain.details.length) {
+      return [{
+        ...baseRow,
+        offerPrice: null,
+        botPrice: null,
+        note: "",
+        customerMessage: "",
+        botMessage: "",
+        time: bargain.updatedAt || bargain.createdAt,
+        round: 0,
+        status: bargain.status,
+        statusText: bargain.status === "expired" ? "Het han" : "Dang thuong luong"
+      }];
+    }
+
+    return bargain.details.map((detail) => ({
+      ...baseRow,
+      offerPrice: detail.customerPrice,
+      botPrice: detail.botPrice,
+      note: detail.botMessage || "",
+      customerMessage: detail.customerMessage || "",
+      botMessage: detail.botMessage || "",
+      time: detail.time,
+      quantity: detail.quantity || bargain.quantity || 1,
+      round: detail.round,
+      status: detail.status,
+      statusText: bargainStatus(detail.round, detail.status)
     }));
   }).sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
 }
@@ -55,15 +118,9 @@ function latestRounds(rows) {
   return [...grouped.values()].sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
 }
 
-function lastDetail(bargain) {
-  return [...(bargain?.details || [])].sort((a, b) => Number(b.round) - Number(a.round))[0] || null;
-}
-
-function isFinal(status) {
-  return ["accepted", "rejected"].includes(status);
-}
-
 export async function listBargains(req, res) {
+  const customerId = req.query.customerId || null;
+  await markExpiredBargains(customerId ? { customerId } : {});
   const rows = await bargainRows({ customerId: req.query.customerId || null });
   const result = req.query.latest === "true" || req.query.admin === "true" ? latestRounds(rows) : rows;
   res.json(req.query.admin === "true"
@@ -72,136 +129,57 @@ export async function listBargains(req, res) {
 }
 
 export async function getBargain(req, res) {
+  await markExpiredBargains({ bargainId: req.params.id });
   res.json(await bargainRows({ id: req.params.id }));
 }
 
 export async function createBargain(req, res) {
-
   const customerId = req.body.customerId;
-
   const productId = req.body.productId;
-
-  const offerPrice = Number(req.body.price || 0);
-
   const quantity = Number(req.body.quantity || 1);
 
-  const customerMessage = req.body.note || "";
-
-  const product = await Product.findOne({
-    productId
-  });
-
+  const product = await Product.findOne({ productId });
   if (!product) {
-    return res.status(404).json({
-      message: "Product not found"
-    });
+    return res.status(404).json({ message: "Product not found" });
   }
 
-  const bargainId = `${customerId}_${productId}`;
+  await markExpiredBargains({ customerId, productId });
 
   let bargain = await Bargain.findOne({
-    bargainId
-  });
+    customerId,
+    productId,
+    status: "negotiating"
+  }).sort({ updatedAt: -1 });
 
-  // tạo session mới
   if (!bargain) {
-
+    const bargainId = await makeBargainId(customerId, productId);
     bargain = await Bargain.create({
       bargainId,
       customerId,
       productId,
       quantity,
-      
-      expiredAt: new Date(
-        Date.now() + 20 * 60 * 1000
-      ),
-
+      expiredAt: new Date(Date.now() + SESSION_MINUTES * 60 * 1000),
       details: []
     });
   }
 
-  // hết hạn
-  if (new Date() > bargain.expiredAt) {
-
-    bargain.status = "expired";
-
-    await bargain.save();
-
-    return res.status(400).json({
-      message: "Bargain session expired"
-    });
+  if (isExpired(bargain)) {
+    await expireBargain(bargain);
+    return res.status(400).json({ message: "Bargain session expired" });
   }
 
-  // session kết thúc
-  if (
-    bargain.status === "accepted" ||
-    bargain.status === "rejected"
-  ) {
-    return res.status(400).json({
-      message: "Bargain ended"
-    });
+  if (isFinal(bargain.status)) {
+    return res.status(400).json({ message: "Bargain ended" });
   }
 
-  // round hiện tại
-  const round = bargain.details.length + 1;
-
-  // quá số round
-  if (round > 3) {
-    return res.status(400).json({
-      message: "Maximum rounds reached"
-    });
-  }
-
-  // bot xử lý
-  const result = processBargain({
-    product,
-    offerPrice,
-    round
-  });
-
-  // lưu lịch sử
-  bargain.details.push({
-    round,
-
-    customerPrice: offerPrice,
-
-    botPrice: result.botPrice,
-
-    quantity,
-
-    customerMessage,
-
-    botMessage: result.botMessage,
-
-    status: result.status,
-
-    time: new Date()
-  });
-
-  // update session status
-  if (
-    result.status === "accepted" ||
-    result.status === "rejected"
-  ) {
-    bargain.status = result.status;
-  }
-
-  await bargain.save();
-
-  return res.json({
+  res.json({
     success: true,
-
-    bargainId,
-
-    round,
-
-    status: result.status,
-
-    customerPrice: offerPrice,
-
-    botPrice: result.botPrice,
-
-    botMessage: result.botMessage
+    bargainId: bargain.bargainId,
+    customerId,
+    productId,
+    quantity: bargain.quantity || quantity,
+    status: bargain.status,
+    expiredAt: bargain.expiredAt
   });
 }
 
@@ -230,9 +208,9 @@ export async function respondBargain(req, res) {
   }
 
   const action = req.body.action;
-  const price = Number(req.body.price || current.price || 0);
+  const price = Number(req.body.price || current.customerPrice || 0);
   const quantity = Number(req.body.quantity || current.quantity || 1);
-  const note = req.body.note || current.note || "";
+  const note = req.body.note || current.botMessage || "";
   let invoiceId = null;
   let nextStatus;
 
@@ -262,9 +240,9 @@ export async function respondBargain(req, res) {
   }
 
   current.status = nextStatus;
-  current.price = price;
+  current.customerPrice = price;
   current.quantity = quantity;
-  current.note = note;
+  current.botMessage = note;
   current.time = new Date();
   await bargain.save();
 
@@ -276,95 +254,73 @@ export async function respondBargain(req, res) {
   });
 }
 
-// chat
 export async function chatBargain(req, res) {
+  const { bargainId, customerId, productId, offerPrice } = req.body;
 
-  const {
-    customerId,
-    productId,
-    offerPrice
-  } = req.body;
-
-  const product = await Product.findOne({
-    productId
-  });
-
+  const product = await Product.findOne({ productId });
   if (!product) {
-
-    return res.status(404).json({
-      message: "Product not found"
-    });
+    return res.status(404).json({ message: "Product not found" });
   }
 
-  const bargainId =
-    `${customerId}_${productId}`;
-
-  let bargain = await Bargain.findOne({
-    bargainId
-  });
+  let bargain = bargainId
+    ? await Bargain.findOne({ bargainId })
+    : await Bargain.findOne({ customerId, productId, status: "negotiating" }).sort({ updatedAt: -1 });
 
   if (!bargain) {
-
+    const nextBargainId = await makeBargainId(customerId, productId);
     bargain = await Bargain.create({
-
-      bargainId,
-
+      bargainId: nextBargainId,
       customerId,
-
       productId,
-
-      expiredAt: new Date(
-        Date.now() + 20 * 60 * 1000
-      ),
-
+      expiredAt: new Date(Date.now() + SESSION_MINUTES * 60 * 1000),
       details: []
     });
   }
 
-  const round =
-    bargain.details.length + 1;
-
-  if (round > 3) {
-
-    return res.status(400).json({
-      message: "Phiên mặc cả đã kết thúc"
-    });
+  if (isExpired(bargain)) {
+    await expireBargain(bargain);
+    return res.status(400).json({ message: "Bargain session expired" });
   }
 
+  if (isFinal(bargain.status) || bargain.status === "expired") {
+    return res.status(400).json({ message: "Bargain ended" });
+  }
+
+  const round = bargain.details.length + 1;
+  if (round > MAX_BARGAIN_ROUNDS) {
+    return res.status(400).json({ message: "Phien mac ca da ket thuc" });
+  }
+
+  const customerPrice = Number(offerPrice);
   const result = processBargain({
-
     product,
-
-    offerPrice: Number(offerPrice),
-
+    offerPrice: customerPrice,
     round
   });
 
   bargain.details.push({
-
     round,
-
-    price: Number(offerPrice),
-
-    quantity: 1,
-
-    note: result.botMessage,
-
+    customerPrice,
+    botPrice: result.botPrice,
+    quantity: bargain.quantity || 1,
+    customerMessage: "",
+    botMessage: result.botMessage,
     status: result.status,
-
     time: new Date()
   });
+
+  if (isFinal(result.status)) {
+    bargain.status = result.status;
+  }
 
   await bargain.save();
 
   res.json({
-
+    bargainId: bargain.bargainId,
     round,
-
     status: result.status,
-
+    customerPrice,
     botPrice: result.botPrice,
-
     botMessage: result.botMessage
   });
 }

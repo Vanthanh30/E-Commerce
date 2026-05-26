@@ -61,7 +61,7 @@ const Cart = () => {
           <div className="cart-items-list">
             {cartItems.map((item) => (
               <CartItem
-                key={item.productId}
+                key={item.cartItemId || `${item.productId}-${item.priceType || "fixed"}`}
                 item={item}
                 onUpdateQuantity={updateQuantity}
                 onRemove={removeItem}

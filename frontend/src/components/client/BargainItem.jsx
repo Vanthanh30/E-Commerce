@@ -2,13 +2,25 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { assetUrl, currency, dateTime } from "../../utils/formatters";
 
-const BargainItem = ({ item }) => {
+const BargainItem = ({ item, action }) => {
+  const sessionStatus = item.sessionStatus || item.status;
+
   const getStatusBadge = (status) => {
-    if (status === "pending") return "badge-warning";
-    if (status === "countered") return "badge-info";
     if (status === "accepted") return "badge-success";
+    if (status === "countered") return "badge-info";
+    if (status === "negotiating" || status === "pending") return "badge-warning";
     return "badge-danger";
   };
+
+  const statusText = (() => {
+    const round = item.round || 1;
+    if (sessionStatus === "negotiating" && Number(item.round || 0) === 0) return "Đang chờ bắt đầu";
+    if (sessionStatus === "negotiating" || sessionStatus === "countered") return `Đang thương lượng vòng ${round}`;
+    if (sessionStatus === "accepted") return `Đã chấp nhận vòng ${round}`;
+    if (sessionStatus === "rejected") return `Đã từ chối vòng ${round}`;
+    if (sessionStatus === "expired") return "Đã hết hạn";
+    return item.statusText || "";
+  })();
 
   return (
     <div className="history-card">
@@ -32,11 +44,14 @@ const BargainItem = ({ item }) => {
                 <h3 className="history-title">{item.productName}</h3>
               </Link>
               <div className="history-meta">
-                Lượt trả giá: <strong>Vòng {item.round}/3</strong>
+                Lượt trả giá:{" "}
+                <strong>
+                  {Number(item.round || 0) > 0 ? `Vòng ${item.round}/3` : "Chưa bắt đầu"}
+                </strong>
               </div>
             </div>
-            <span className={`badge ${getStatusBadge(item.status)}`}>
-              {item.statusText}
+            <span className={`badge ${getStatusBadge(sessionStatus)}`}>
+              {statusText}
             </span>
           </div>
 
@@ -59,7 +74,7 @@ const BargainItem = ({ item }) => {
               Mức giá bạn đề xuất:
               <br />
               <strong style={{ color: "var(--primary)", fontSize: "16px" }}>
-                {currency(item.offerPrice)}
+                {item.offerPrice ? currency(item.offerPrice) : "Chưa đề xuất"}
               </strong>
             </div>
           </div>
@@ -75,7 +90,7 @@ const BargainItem = ({ item }) => {
                 marginTop: "8px",
               }}
             >
-              " {item.note} "
+              "{item.note}"
             </div>
           )}
         </div>
@@ -84,13 +99,9 @@ const BargainItem = ({ item }) => {
           <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>
             Cập nhật: {dateTime(item.time)}
           </span>
-          {item.status === "accepted" && (
-            <span
-              style={{ fontSize: "13px", color: "#16a34a", fontWeight: "500" }}
-            >
-              Đơn hàng đã được tạo!
-            </span>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {action}
+          </div>
         </div>
       </div>
     </div>

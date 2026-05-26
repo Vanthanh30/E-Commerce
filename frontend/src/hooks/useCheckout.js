@@ -62,7 +62,7 @@ export const useCheckout = () => {
           customerId: user.customerId,
           productId: item.productId,
           quantity: item.quantity,
-          price: item.fixedPrice || item.price,
+          price: item.price || item.fixedPrice,
           address: shippingAddress,
           paymentMethod: Number(paymentMethod),
           status: 1, // Trạng thái ban đầu: 1 - Chờ xác nhận (Theo status.helper.js)
@@ -83,7 +83,7 @@ export const useCheckout = () => {
 
   const calculateTotal = () => {
     return cartItems.reduce(
-      (sum, item) => sum + (item.fixedPrice || item.price || 0) * item.quantity,
+      (sum, item) => sum + (item.price || item.fixedPrice || 0) * item.quantity,
       0,
     );
   };

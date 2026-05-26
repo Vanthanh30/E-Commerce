@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { productService } from "../../../services/client/productService";
 import { cartService } from "../../../services/client/cartService";
-import { bargainService } from "../../../services/client/bargainService";
 import { assetUrl, currency } from "../../../utils/formatters";
 import "./product-detail.css";
 
@@ -12,11 +11,7 @@ const ProductDetail = () => {
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const [addingToCart, setAddingToCart] = useState(false);
-  const [showBargain, setShowBargain] = useState(false);
-  const [proposedPrice, setProposedPrice] = useState("");
-  const [bargaining, setBargaining] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -36,13 +31,13 @@ const ProductDetail = () => {
     const userStr = sessionStorage.getItem("user");
     if (!userStr) return navigate("/login");
 
-    const user = JSON.parse(userStr); // Lấy thông tin user để trích xuất customerId
+    const user = JSON.parse(userStr);
     setAddingToCart(true);
 
     try {
       await cartService.addToCart({
-        customerId: user.customerId, // Bổ sung bắt buộc
-        productId: product.productId, // Đổi từ _id thành productId
+        customerId: user.customerId,
+        productId: product.productId,
         quantity: 1,
       });
       alert("Đã thêm sản phẩm vào giỏ hàng!");
@@ -53,30 +48,12 @@ const ProductDetail = () => {
     }
   };
 
-  const handleBargainSubmit = async (e) => {
-    e.preventDefault();
+  const handleBargain = () => {
     const userStr = sessionStorage.getItem("user");
     if (!userStr) return navigate("/login");
-
-    const user = JSON.parse(userStr);
-    setBargaining(true);
-
-    try {
-      await bargainService.create({
-        customerId: user.customerId, // Bổ sung bắt buộc
-        productId: product.productId, // Đổi từ _id thành productId
-        price: Number(proposedPrice), // BE của bạn nhận biến là 'price', không phải 'proposedPrice'
-        quantity: 1, // Bổ sung số lượng mặc định
-        note: "",
-      });
-      alert("Đề xuất giá thành công!");
-      setShowBargain(false);
-      setProposedPrice("");
-    } catch (err) {
-      alert(err.message || "Lỗi khi gửi đề xuất.");
-    } finally {
-      setBargaining(false);
-    }
+    
+    // Chuyển hướng sang trang bargains với productId của sản phẩm hiện tại
+    navigate(`/bargains?product=${product.productId}`);
   };
 
   if (loading)
@@ -117,35 +94,11 @@ const ProductDetail = () => {
               </button>
               <button
                 className="btn btn-outline"
-                onClick={() => setShowBargain(!showBargain)}
+                onClick={handleBargain}
               >
                 Đề xuất giá
               </button>
             </div>
-
-            {showBargain && (
-              <div className="bargain-box">
-                <h3>Gửi đề xuất giá</h3>
-                <form className="bargain-form" onSubmit={handleBargainSubmit}>
-                  <input
-                    type="number"
-                    className="form-control"
-                    placeholder="Mức giá (VNĐ)"
-                    value={proposedPrice}
-                    onChange={(e) => setProposedPrice(e.target.value)}
-                    min={product.minPrice || 1000} // Ngăn chặn trả giá thấp hơn minPrice nếu có
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={bargaining}
-                  >
-                    {bargaining ? "Đang gửi..." : "Gửi"}
-                  </button>
-                </form>
-              </div>
-            )}
           </div>
 
           <div
