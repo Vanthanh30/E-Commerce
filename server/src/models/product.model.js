@@ -11,9 +11,10 @@ const productSchema = new mongoose.Schema(
     imageUrl: { type: String, default: "" },
     cloudinaryPublicId: { type: String, default: "" },
     description: { type: String, default: "" },
-    status: { type: Number, default: 1 }
+    status: { type: Number, default: 1 },
+    views: { type: Number, default: 0 },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("Product", productSchema);

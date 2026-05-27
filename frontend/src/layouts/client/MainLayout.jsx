@@ -26,16 +26,16 @@ const MainLayout = () => {
             Cửa hàng
           </Link>
           <Link
+            to="/products"
+            className={location.pathname.includes("/product") ? "active" : ""}
+          >
+            Sản phẩm
+          </Link>
+          <Link
             to="/bargains"
             className={location.pathname.includes("/bargain") ? "active" : ""}
           >
             Thương lượng
-          </Link>
-          <Link
-            to="/cart"
-            className={location.pathname === "/cart" ? "active" : ""}
-          >
-            Giỏ hàng
           </Link>
           <Link
             to="/orders"
@@ -61,6 +61,15 @@ const MainLayout = () => {
               }}
             />
           </div>
+
+          <Link
+            to="/cart"
+            className="action-icon"
+            style={{ marginLeft: "8px" }}
+            title="Giỏ hàng"
+          >
+            <i className="material-icons">shopping_bag</i>
+          </Link>
 
           {user ? (
             <div
