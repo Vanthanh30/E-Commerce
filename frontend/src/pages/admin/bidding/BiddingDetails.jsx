@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeft, Save } from "lucide-react";
 import "./BiddingDetails.css";
 
@@ -343,49 +343,271 @@ function EditView({ selected, onNavigate }) {
 // --- DetailsView ---
 function DetailsView({ selected, onNavigate }) {
     const [item, setItem] = useState(null);
+    const [rounds, setRounds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [counterPrice, setCounterPrice] = useState("");
+    const [counterNote, setCounterNote] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+
+    const loadDetails = async () => {
+        try {
+            setError(null);
+            const data = await bargainService.getById(selected.idTraGia);
+            if (Array.isArray(data) && data.length > 0) {
+                const sorted = [...data].sort((a, b) => Number(a.round || 0) - Number(b.round || 0));
+                setRounds(sorted);
+                const latest = sorted[sorted.length - 1];
+                setItem(latest);
+                if (!counterPrice) {
+                    setCounterPrice(latest.botPrice || latest.listedPrice || "");
+                }
+            } else {
+                setError("Không tìm thấy dữ liệu thương lượng.");
+            }
+        } catch (e) {
+            setError(e.message || "Lỗi tải chi tiết phiên mặc cả.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const load = async () => {
-            try {
-                const data = await apiGetOne(selected.idTraGia);
-                setItem(data);
-            } catch (e) {
-                setError(e.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
+        loadDetails();
     }, [selected]);
 
-    if (loading) return <div className="bd-loading">Đang tải...</div>;
-    if (error) return <div className="alert alert-danger">{error}</div>;
+    const handleAction = async (action, additionalData = {}) => {
+        if (!item) return;
+        setSubmitting(true);
+        setError(null);
+        try {
+            const body = {
+                action,
+                round: item.round,
+                quantity: item.quantity,
+                ...additionalData
+            };
+            await bargainService.respond(item.bargainId, body);
+            setCounterPrice("");
+            setCounterNote("");
+            await loadDetails();
+        } catch (err) {
+            setError(err.message || "Không thể thực hiện hành động.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (loading) return <div className="bd-loading">Đang tải chi tiết...</div>;
+    if (error && !item) return <div className="alert alert-danger m-3">{error}</div>;
+    if (!item) return <div className="bd-empty">Không tìm thấy thông tin phiên mặc cả</div>;
+
+    const imgUrl = item.imageUrl
+        ? item.imageUrl.startsWith("http")
+            ? item.imageUrl
+            : `/Uploads/${item.imageUrl}`
+        : "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=240";
+
+    const isFinished = ["accepted", "rejected", "expired"].includes(item.sessionStatus);
 
     return (
         <div className="bd-wrapper">
             <div className="bd-sub-header">
                 <div className="bd-sub-header-row">
-                    <h1>Chi Tiết Trả Giá</h1>
+                    <h1>Chi Tiết & Hội Thoại Thương Lượng</h1>
                     <button className="btn btn-outline-secondary btn-sm" onClick={() => onNavigate("list")} style={{ display: "flex", alignItems: "center", gap: "6px" }}><ArrowLeft size={16} /> Quay Lại</button>
                 </div>
+                <p>Mã phiên: <strong>{item.bargainId}</strong></p>
             </div>
-            <div className="bd-detail-card">
-                <dl className="bd-detail-grid">
-                    <DetailRow label="ID Trả Giá" value={item.idTraGia} />
-                    <DetailRow label="Số Lần" value={item.soLan} />
-                    <DetailRow label="Giá" value={Number(item.gia).toLocaleString("vi-VN") + " đ"} />
-                    <DetailRow label="Số Lượng" value={item.soLuong} />
-                    <DetailRow label="Thời Gian" value={item.thoiGian} />
-                    <DetailRow label="Trạng Thái" value={item.trangThai} />
-                    <DetailRow label="ID Khách Hàng" value={item.traGia?.idKhachHang} />
-                    <DetailRow label="Ghi Chú" value={item.ghiChu} className="full" />
-                </dl>
-                <div className="bd-form-actions">
-                    <button className="btn btn-warning" onClick={() => onNavigate("edit", item)}>Sửa</button>
-                    <button className="btn btn-danger" onClick={() => onNavigate("delete", item)}>Xóa</button>
-                    <button className="btn btn-outline-secondary" onClick={() => onNavigate("list")}>Quay Lại Danh Sách</button>
+
+            {error && <div className="alert alert-danger">{error}</div>}
+
+            <div className="bd-split-container">
+                {/* CỘT TRÁI: THÔNG TIN SẢN PHẨM & KHÁCH HÀNG */}
+                <div className="bd-left-panel">
+                    <div className="bd-panel-card">
+                        <h3>Thông tin sản phẩm</h3>
+                        <div className="bd-product-info-wrap">
+                            <img src={imgUrl} alt={item.productName} className="bd-product-img" />
+                            <div className="bd-product-meta-details">
+                                <h4 className="bd-product-title">{item.productName}</h4>
+                                <span className="bd-product-sku">Mã SP: {item.productId}</span>
+                                <div className="bd-price-row">
+                                    <div className="bd-price-box">
+                                        <span className="bd-price-label">Giá niêm yết</span>
+                                        <span className="bd-price-value fixed">{Number(item.listedPrice || 0).toLocaleString("vi-VN")} đ</span>
+                                    </div>
+                                    <div className="bd-price-box">
+                                        <span className="bd-price-label">Mức giảm tối đa (Giá sàn)</span>
+                                        <span className="bd-price-value min">
+                                            {item.minPrice || 0}% ({Number((item.listedPrice || 0) * (1 - (item.minPrice || 0) / 100)).toLocaleString("vi-VN")} đ)
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bd-panel-card">
+                        <h3>Thông tin khách hàng</h3>
+                        <dl className="bd-customer-list">
+                            <dt>Họ và tên</dt>
+                            <dd>{item.customerName || "—"}</dd>
+                            <dt>Mã khách hàng</dt>
+                            <dd><code>{item.customerId}</code></dd>
+                            <dt>Địa chỉ nhận hàng</dt>
+                            <dd>{item.address || "—"}</dd>
+                        </dl>
+                    </div>
+
+                    <div className="bd-panel-card">
+                        <h3>Tổng quan phiên đàm phán</h3>
+                        <dl className="bd-overview-list">
+                            <dt>Số lượng thương lượng</dt>
+                            <dd><strong>{item.quantity}</strong> sản phẩm</dd>
+                            <dt>Thời gian tạo</dt>
+                            <dd>{item.time ? new Date(item.time).toLocaleString("vi-VN") : "—"}</dd>
+                            <dt>Thời gian hết hạn</dt>
+                            <dd>{item.expiredAt ? new Date(item.expiredAt).toLocaleString("vi-VN") : "—"}</dd>
+                            <dt>Vòng hiện tại</dt>
+                            <dd><span className="bd-round-badge">Vòng {item.round} / 3</span></dd>
+                            <dt>Trạng thái tổng thể</dt>
+                            <dd>
+                                <span className={`bd-status-pill ${item.sessionStatus}`}>
+                                    {item.sessionStatus === "accepted" ? "Đã chấp nhận" :
+                                     item.sessionStatus === "rejected" ? "Từ chối" :
+                                     item.sessionStatus === "expired" ? "Hết hạn" : "Đang thương lượng"}
+                                </span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+
+                {/* CỘT PHẢI: GIAO DIỆN CHAT VỚI CLIENT */}
+                <div className="bd-right-panel">
+                    <div className="bd-chat-header-bar">
+                        <div className="bd-chat-header-avatar">💬</div>
+                        <div>
+                            <h4>Hội thoại mặc cả</h4>
+                            <p>Đang nhắn với {item.customerName || "Khách hàng"}</p>
+                        </div>
+                    </div>
+
+                    <div className="bd-chat-messages-area">
+                        {rounds.map((round, idx) => (
+                            <React.Fragment key={idx}>
+                                {/* Bong bóng của khách hàng */}
+                                <div className="bd-chat-msg-row customer">
+                                    <div className="bd-chat-avatar">KH</div>
+                                    <div className="bd-chat-bubble customer">
+                                        <div className="bd-chat-bubble-title">Đề xuất mua</div>
+                                        <div className="bd-chat-price">{Number(round.offerPrice || 0).toLocaleString("vi-VN")} đ</div>
+                                        {round.customerMessage && (
+                                            <p className="bd-chat-text">{round.customerMessage}</p>
+                                        )}
+                                        <span className="bd-chat-time">{new Date(round.time).toLocaleTimeString("vi-VN")}</span>
+                                    </div>
+                                </div>
+
+                                {/* Bong bóng của shop/hệ thống */}
+                                {(round.botPrice || round.botMessage || round.status !== "pending") && (
+                                    <div className="bd-chat-msg-row shop">
+                                        <div className="bd-chat-bubble shop">
+                                            <div className="bd-chat-bubble-title">Shop phản hồi</div>
+                                            {round.status === "accepted" ? (
+                                                <div className="bd-chat-status text-success">✓ Đã chấp nhận bán giá: {Number(round.botPrice || round.offerPrice).toLocaleString("vi-VN")} đ</div>
+                                            ) : round.status === "rejected" ? (
+                                                <div className="bd-chat-status text-danger">✗ Đã từ chối mức giá này</div>
+                                            ) : (
+                                                <div className="bd-chat-price shop-offer">Đề xuất lại: {Number(round.botPrice || 0).toLocaleString("vi-VN")} đ</div>
+                                            )}
+                                            {round.botMessage && (
+                                                <p className="bd-chat-text">{round.botMessage}</p>
+                                            )}
+                                            <span className="bd-chat-time">{new Date(round.time).toLocaleTimeString("vi-VN")}</span>
+                                        </div>
+                                        <div className="bd-chat-avatar shop">AT</div>
+                                    </div>
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </div>
+
+                    {/* BẢNG ĐIỀU KHIỂN PHẢN HỒI (ADMIN ACTIONS) */}
+                    <div className="bd-chat-action-panel">
+                        {isFinished ? (
+                            <div className="bd-resolved-message">
+                                <span className="icon">🔒</span>
+                                <div>
+                                    <h5>Phiên mặc cả đã đóng</h5>
+                                    <p>
+                                        {item.sessionStatus === "accepted" ? "Hai bên đã thống nhất giao dịch thành công." :
+                                         item.sessionStatus === "rejected" ? "Phiên mặc cả đã bị từ chối." :
+                                         "Phiên mặc cả đã hết hạn thời gian đàm phán."}
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bd-admin-action-controls">
+                                <h5>Hành động của Admin (Vòng {item.round}/3)</h5>
+                                <div className="bd-quick-action-buttons">
+                                    <button 
+                                        className="btn btn-success" 
+                                        onClick={() => handleAction("accept", { price: item.offerPrice })}
+                                        disabled={submitting}
+                                    >
+                                        Đồng ý bán ({Number(item.offerPrice || 0).toLocaleString("vi-VN")}đ)
+                                    </button>
+                                    <button 
+                                        className="btn btn-danger" 
+                                        onClick={() => handleAction("reject")}
+                                        disabled={submitting}
+                                    >
+                                        Từ chối mặc cả
+                                    </button>
+                                </div>
+
+                                {item.round < 3 ? (
+                                    <div className="bd-counter-offer-section">
+                                        <h6>Đề xuất mức giá khác (Counter Offer)</h6>
+                                        <div className="bd-counter-grid">
+                                            <div className="bd-input-group">
+                                                <label>Giá đề xuất lại (VNĐ)</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={counterPrice} 
+                                                    onChange={(e) => setCounterPrice(e.target.value)} 
+                                                    placeholder="Nhập giá VNĐ..."
+                                                    disabled={submitting}
+                                                />
+                                            </div>
+                                            <div className="bd-input-group full-width">
+                                                <label>Lời nhắn tới khách hàng</label>
+                                                <textarea 
+                                                    rows="2"
+                                                    value={counterNote}
+                                                    onChange={(e) => setCounterNote(e.target.value)}
+                                                    placeholder="Nhập ghi chú phản hồi..."
+                                                    disabled={submitting}
+                                                />
+                                            </div>
+                                        </div>
+                                        <button 
+                                            className="btn btn-primary w-100 mt-2" 
+                                            onClick={() => handleAction("counter", { price: Number(counterPrice), note: counterNote })}
+                                            disabled={submitting || !counterPrice}
+                                        >
+                                            {submitting ? "Đang gửi..." : "Gửi đề xuất giá mới"}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="bd-warning-limit">
+                                        ⚠️ Đã đạt giới hạn 3 vòng đàm phán tối đa. Chỉ có thể chọn Đồng ý hoặc Từ chối.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

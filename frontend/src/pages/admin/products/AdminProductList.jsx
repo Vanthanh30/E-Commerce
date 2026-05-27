@@ -80,10 +80,7 @@ function ListView({ onCreate, onEdit, onDetails }) {
         return true;
     });
 
-    const totalValue = filtered.reduce(
-        (s, p) => s + Number(p.giaCoDinh || 0),
-        0
-    );
+
 
     return (
         <div className="pl-wrapper">
@@ -121,7 +118,7 @@ function ListView({ onCreate, onEdit, onDetails }) {
                                 <th>Sản phẩm</th>
                                 <th>Danh mục</th>
                                 <th>Giá cố định</th>
-                                <th>Giá sàn</th>
+                                <th>% Giảm tối đa</th>
                                 <th>Tồn kho</th>
                                 <th>Trạng thái</th>
                                 <th></th>
@@ -153,7 +150,7 @@ function ListView({ onCreate, onEdit, onDetails }) {
                                             </td>
                                             <td>{item.idDanhMuc ?? "—"}</td>
                                             <td>{fmt(item.giaCoDinh)}</td>
-                                            <td>{fmt(item.giaThapNhat)}</td>
+                                            <td>{item.giaThapNhat != null ? `${item.giaThapNhat}%` : "—"}</td>
                                             <td>{stock}</td>
                                             <td>
                                                 {stock > 0 ? (
@@ -182,10 +179,7 @@ function ListView({ onCreate, onEdit, onDetails }) {
             <p className="pl-count">Hiển thị {filtered.length} sản phẩm</p>
 
             <div className="pl-stats">
-                <div className="pl-stat-card">
-                    <label>Giá trị kho hàng</label>
-                    <strong>{totalValue > 0 ? fmt(totalValue) : "—"}</strong>
-                </div>
+
                 <div className="pl-stat-card">
                     <label>Thương lượng đang mở</label>
                     <strong>—</strong>
@@ -314,8 +308,8 @@ function CreateView({ onBack }) {
                             {errors.giaCoDinh && <div className="invalid-feedback">{errors.giaCoDinh}</div>}
                         </div>
                         <div className="pl-field">
-                            <label>Giá thấp nhất</label>
-                            <input type="number" name="giaThapNhat" min="0" step="1000" placeholder="0"
+                            <label>% Giảm giá mặc cả tối đa</label>
+                            <input type="number" name="giaThapNhat" min="0" max="100" step="1" placeholder="Ví dụ: 20"
                                 value={form.giaThapNhat} onChange={handleChange} />
                         </div>
                         <div className="pl-field">
@@ -494,8 +488,8 @@ function EditView({ productId, onBack }) {
                             {errors.giaCoDinh && <div className="invalid-feedback">{errors.giaCoDinh}</div>}
                         </div>
                         <div className="pl-field">
-                            <label>Giá thấp nhất</label>
-                            <input type="number" name="giaThapNhat" min="0" step="1000" placeholder="0"
+                            <label>% Giảm giá mặc cả tối đa</label>
+                            <input type="number" name="giaThapNhat" min="0" max="100" step="1" placeholder="Ví dụ: 20"
                                 value={form.giaThapNhat ?? ""} onChange={handleChange} />
                         </div>
                         <div className="pl-field pl-field-full">
@@ -572,7 +566,7 @@ function DetailsView({ productId, onBack, onEdit }) {
         { label: "Tên sản phẩm", value: product.tenSanPham },
         { label: "Danh mục", value: product.danhMuc?.tenDanhMuc ?? product.idDanhMuc ?? "—" },
         { label: "Giá cố định", value: fmt(product.giaCoDinh) },
-        { label: "Giá thấp nhất", value: fmt(product.giaThapNhat) },
+        { label: "% Giảm giá mặc cả tối đa", value: product.giaThapNhat != null ? `${product.giaThapNhat}%` : "—" },
         { label: "Số lượng còn", value: product.SoLuongCon ?? 0 },
         { label: "Mô tả", value: product.moTa || "—" },
         { label: "Trạng thái", value: product.trangThai === 1 ? "Đang bán" : "Lưu nháp" },
