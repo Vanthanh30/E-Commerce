@@ -6,20 +6,24 @@ import { bargainService } from "../../../services/admin/bargainService";
 
 const mapToFrontend = (b) => ({
     idTraGia: b.bargainId,
-    soLan: 1, // Placeholder since backend might not support `soLan` yet
-    soLanCuoi: 1,
+    soLan: b.round || 0,
+    soLanCuoi: b.round || 0,
     tenSanPham: b.productName,
     traGia: { idKhachHang: b.customerName },
     soLuong: b.quantity,
-    gia: b.price,
-    giaBan: b.price, // Optional if missing
-    thoiGian: b.createdAt ? new Date(b.createdAt).toLocaleString("vi-VN") : "",
-    trangThai: b.status === 2 ? "Đã chấp nhận" : b.status === 3 ? "Từ chối" : "Đang chờ",
+    gia: b.offerPrice,
+    giaBan: b.botPrice || b.offerPrice,
+    thoiGian: b.time ? new Date(b.time).toLocaleString("vi-VN") : "",
+    trangThai:
+        b.status === "accepted" ? "Da chap nhan" :
+        b.status === "rejected" ? "Tu choi" :
+        b.status === "countered" ? "Cho khach phan hoi" :
+        "Dang cho admin",
     ghiChu: b.note || ""
 });
 
 async function apiGetAll() {
-    const data = await bargainService.getAll();
+    const data = await bargainService.getAll({ admin: "true" });
     return data.map(mapToFrontend);
 }
 async function apiGetOne(idTraGia) {
@@ -409,6 +413,7 @@ function DetailsView({ selected, onNavigate }) {
         : "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=240";
 
     const isFinished = ["accepted", "rejected", "expired"].includes(item.sessionStatus);
+    const canAdminRespond = item.status === "pending";
 
     return (
         <div className="bd-wrapper">
@@ -440,7 +445,17 @@ function DetailsView({ selected, onNavigate }) {
                                     <div className="bd-price-box">
                                         <span className="bd-price-label">Mức giảm tối đa (Giá sàn)</span>
                                         <span className="bd-price-value min">
-                                            {item.minPrice || 0}% ({Number((item.listedPrice || 0) * (1 - (item.minPrice || 0) / 100)).toLocaleString("vi-VN")} đ)
+                                            {(() => {
+                                                const minPrice = item.minPrice || 0;
+                                                const listed = item.listedPrice || 0;
+                                                if (minPrice > 100) {
+                                                    const pct = listed > 0 ? Math.round((1 - minPrice / listed) * 100) : 0;
+                                                    return `${pct}% (${Number(minPrice).toLocaleString("vi-VN")} đ)`;
+                                                } else {
+                                                    const val = listed * (1 - minPrice / 100);
+                                                    return `${minPrice}% (${Number(val).toLocaleString("vi-VN")} đ)`;
+                                                }
+                                            })()}
                                         </span>
                                     </div>
                                 </div>
@@ -545,6 +560,14 @@ function DetailsView({ selected, onNavigate }) {
                                          item.sessionStatus === "rejected" ? "Phiên mặc cả đã bị từ chối." :
                                          "Phiên mặc cả đã hết hạn thời gian đàm phán."}
                                     </p>
+                                </div>
+                            </div>
+                        ) : !canAdminRespond ? (
+                            <div className="bd-resolved-message">
+                                <span className="icon">...</span>
+                                <div>
+                                    <h5>Dang cho khach hang phan hoi</h5>
+                                    <p>Shop da tra loi vong nay. Khach hang can gui muc gia tiep theo truoc khi admin co the xu ly tiep.</p>
                                 </div>
                             </div>
                         ) : (

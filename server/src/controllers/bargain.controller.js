@@ -7,6 +7,7 @@ import { processBargain } from "../services/bargain.service.js";
 
 const MAX_BARGAIN_ROUNDS = 3;
 const SESSION_MINUTES = 20;
+const AUTO_RESPONSE_MINUTES = 10;
 
 function isFinal(status) {
   return ["accepted", "rejected"].includes(status);
@@ -31,6 +32,64 @@ async function markExpiredBargains(filter = {}) {
       expiredAt: { $lt: new Date() },
     },
     { $set: { status: "expired" } },
+  );
+}
+
+async function applyAutoResponse(bargain, product = null) {
+  if (!bargain || bargain.status !== "negotiating") return bargain;
+
+  const latest = lastDetail(bargain);
+  if (
+    !latest ||
+    latest.status !== "pending" ||
+    !latest.autoReplyAt ||
+    new Date(latest.autoReplyAt) > new Date()
+  ) {
+    return bargain;
+  }
+
+  const bargainProduct =
+    product || (await Product.findOne({ productId: bargain.productId }));
+  if (!bargainProduct) return bargain;
+
+  const result = processBargain({
+    product: bargainProduct,
+    offerPrice: Number(latest.customerPrice || 0),
+    round: Number(latest.round || 1),
+  });
+
+  latest.botPrice = result.botPrice;
+  latest.botMessage = result.botMessage;
+  latest.status = result.status;
+  latest.responder = "auto";
+  latest.time = new Date();
+
+  if (isFinal(result.status)) {
+    bargain.status = result.status;
+  }
+
+  await bargain.save();
+  return bargain;
+}
+
+async function applyDueAutoResponses(filter = {}) {
+  const bargains = await Bargain.find({
+    ...filter,
+    status: "negotiating",
+    "details.status": "pending",
+    "details.autoReplyAt": { $lte: new Date() },
+  });
+
+  if (!bargains.length) return;
+
+  const productIds = [...new Set(bargains.map((item) => item.productId))];
+  const products = await Product.find({ productId: { $in: productIds } });
+  const productMap = new Map(products.map((item) => [item.productId, item]));
+
+  await Promise.all(
+    bargains.map((bargain) =>
+      applyAutoResponse(bargain, productMap.get(bargain.productId)),
+    ),
   );
 }
 
@@ -108,6 +167,8 @@ async function bargainRows({ customerId = null, id = null } = {}) {
         note: detail.botMessage || "",
         customerMessage: detail.customerMessage || "",
         botMessage: detail.botMessage || "",
+        autoReplyAt: detail.autoReplyAt,
+        responder: detail.responder || null,
         time: detail.time,
         quantity: detail.quantity || bargain.quantity || 1,
         round: detail.round,
@@ -132,6 +193,7 @@ function latestRounds(rows) {
 
 export async function listBargains(req, res) {
   const customerId = req.query.customerId || null;
+  await applyDueAutoResponses(customerId ? { customerId } : {});
   await markExpiredBargains(customerId ? { customerId } : {});
   const rows = await bargainRows({ customerId: req.query.customerId || null });
   const result =
@@ -141,13 +203,14 @@ export async function listBargains(req, res) {
   res.json(
     req.query.admin === "true"
       ? result.filter((row) =>
-          ["pending", "accepted", "rejected"].includes(row.status),
+          ["pending", "countered", "accepted", "rejected"].includes(row.status),
         )
       : result,
   );
 }
 
 export async function getBargain(req, res) {
+  await applyDueAutoResponses({ bargainId: req.params.id });
   await markExpiredBargains({ bargainId: req.params.id });
   res.json(await bargainRows({ id: req.params.id }));
 }
@@ -162,6 +225,7 @@ export async function createBargain(req, res) {
     return res.status(404).json({ message: "Product not found" });
   }
 
+  await applyDueAutoResponses({ customerId, productId });
   await markExpiredBargains({ customerId, productId });
 
   let bargain = await Bargain.findOne({
@@ -206,6 +270,7 @@ export async function createBargain(req, res) {
 export async function respondBargain(req, res) {
   const currentRound = Number(req.body.round);
   const bargain = await Bargain.findOne({ bargainId: req.params.id });
+  await applyAutoResponse(bargain);
   const customer = bargain
     ? await Customer.findOne({ customerId: bargain.customerId }).lean()
     : null;
@@ -229,7 +294,7 @@ export async function respondBargain(req, res) {
   if (current.status !== "pending") {
     res
       .status(409)
-      .json({ message: "Only pending bargain rounds can be answered" });
+      .json({ message: "This bargain round has already been answered" });
     return;
   }
 
@@ -273,15 +338,22 @@ export async function respondBargain(req, res) {
   }
 
   current.status = nextStatus;
-  current.customerPrice = price;
+  current.botPrice = action === "reject" ? current.botPrice : price;
   current.quantity = quantity;
   current.botMessage = note;
+  current.responder = "admin";
   current.time = new Date();
+  if (isFinal(nextStatus)) {
+    bargain.status = nextStatus;
+  }
   await bargain.save();
 
   res.json({
     bargainId: req.params.id,
     round: current.round,
+    status: nextStatus,
+    botPrice: current.botPrice,
+    botMessage: current.botMessage,
     statusText: bargainStatus(current.round, nextStatus),
     invoiceId,
   });
@@ -303,6 +375,10 @@ export async function chatBargain(req, res) {
         status: "negotiating",
       }).sort({ updatedAt: -1 });
 
+  if (bargain) {
+    await applyAutoResponse(bargain, product);
+  }
+
   if (!bargain) {
     const nextBargainId = await makeBargainId(customerId, productId);
     bargain = await Bargain.create({
@@ -323,41 +399,48 @@ export async function chatBargain(req, res) {
     return res.status(400).json({ message: "Bargain ended" });
   }
 
+  const latest = lastDetail(bargain);
+  if (latest?.status === "pending") {
+    return res.status(409).json({
+      message: "Shop is reviewing your latest offer",
+      bargainId: bargain.bargainId,
+      round: latest.round,
+      status: latest.status,
+      autoReplyAt: latest.autoReplyAt,
+    });
+  }
+
   const round = bargain.details.length + 1;
   if (round > MAX_BARGAIN_ROUNDS) {
     return res.status(400).json({ message: "Phien mac ca da ket thuc" });
   }
 
   const customerPrice = Number(offerPrice);
-  const result = processBargain({
-    product,
-    offerPrice: customerPrice,
-    round,
-  });
+  const autoReplyAt = new Date(Date.now() + AUTO_RESPONSE_MINUTES * 60 * 1000);
 
   bargain.details.push({
     round,
     customerPrice,
-    botPrice: result.botPrice,
+    botPrice: null,
     quantity: bargain.quantity || 1,
     customerMessage: "",
-    botMessage: result.botMessage,
-    status: result.status,
+    botMessage: "",
+    status: "pending",
+    autoReplyAt,
+    responder: null,
     time: new Date(),
   });
-
-  if (isFinal(result.status)) {
-    bargain.status = result.status;
-  }
 
   await bargain.save();
 
   res.json({
     bargainId: bargain.bargainId,
     round,
-    status: result.status,
+    status: "pending",
     customerPrice,
-    botPrice: result.botPrice,
-    botMessage: result.botMessage,
+    botPrice: null,
+    botMessage: "",
+    autoReplyAt,
+    waitSeconds: AUTO_RESPONSE_MINUTES * 60,
   });
 }

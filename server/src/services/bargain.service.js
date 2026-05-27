@@ -1,73 +1,45 @@
 const MAX_ROUNDS = 3;
 
-export function processBargain({
-  product,
-  offerPrice,
-  round
-}) {
+export function getRoundRequiredPrice(product, round) {
+  const fixedPrice = Number(product.fixedPrice || 0);
+  const configuredMin = Number(product.minPrice || 0);
+  const safeRound = Math.min(Math.max(Number(round || 1), 1), MAX_ROUNDS);
 
-  const fixedPrice = Number(product.fixedPrice);
-
-  let requiredPrice = fixedPrice;
-
-  // ROUND 1 -> giảm tối đa 20%
-  if (round === 1) {
-
-    requiredPrice = Math.floor(
-      fixedPrice * 0.8
-    );
+  if (configuredMin > 0 && configuredMin <= 100) {
+    const maxDiscount = fixedPrice * (configuredMin / 100);
+    return Math.floor(fixedPrice - (maxDiscount * safeRound) / MAX_ROUNDS);
   }
 
-  // ROUND 2 -> giảm tối đa 30%
-  if (round === 2) {
-
-    requiredPrice = Math.floor(
-      fixedPrice * 0.7
-    );
+  if (configuredMin > 100 && configuredMin < fixedPrice) {
+    const maxDiscount = fixedPrice - configuredMin;
+    return Math.floor(fixedPrice - (maxDiscount * safeRound) / MAX_ROUNDS);
   }
 
-  // ROUND 3 -> giảm tối đa 40%
-  if (round === 3) {
+  return fixedPrice;
+}
 
-    requiredPrice = Math.floor(
-      fixedPrice * 0.6
-    );
-  }
+export function processBargain({ product, offerPrice, round }) {
+  const requiredPrice = getRoundRequiredPrice(product, round);
 
-  // USER ĐỦ GIÁ -> ACCEPT
-  if (offerPrice >= requiredPrice) {
-
+  if (Number(offerPrice) >= requiredPrice) {
     return {
-
       status: "accepted",
-
-      // chấp nhận đúng giá user trả
-      botPrice: offerPrice,
-
-      botMessage: `Shop đồng ý mức giá ${offerPrice} VNĐ`
+      botPrice: Number(offerPrice),
+      botMessage: `Shop dong y muc gia ${offerPrice} VND`,
     };
   }
 
-  // ROUND 3 -> FAIL -> REJECT
-  if (round === 3) {
-
+  if (Number(round) >= MAX_ROUNDS) {
     return {
-
       status: "rejected",
-
       botPrice: requiredPrice,
-
-      botMessage: `Shop từ chối mức giá ${offerPrice} VNĐ. Cảm ơn bạn đã tham gia mặc cả`
+      botMessage: `Shop tu choi muc gia ${offerPrice} VND. Cam on ban da tham gia mac ca`,
     };
   }
 
-  // ROUND 1-2 -> COUNTER
   return {
-
     status: "countered",
-
     botPrice: requiredPrice,
-
-    botMessage: "Shop chưa thể bán với mức giá này."
+    botMessage: "Shop chua the ban voi muc gia nay.",
   };
 }

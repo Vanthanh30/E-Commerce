@@ -4,6 +4,7 @@ import { currency, dateTime } from "../../utils/formatters";
 import "./BargainChat.css";
 
 const FINAL_STATUSES = ["accepted", "rejected", "expired"];
+const POLL_INTERVAL_MS = 10000;
 
 const BargainChat = ({ bargain, onComplete, onClose }) => {
   const [messages, setMessages] = useState([]);
@@ -18,11 +19,13 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
   const messagesEndRef = useRef(null);
 
   const buildMessages = (bargainData) => {
-    const chatMessages = [{
-      type: "bot",
-      text: `Chào mừng bạn đến với phiên thương lượng sản phẩm "${bargainData.productName}". Giá niêm yết: ${currency(bargainData.listedPrice)}. Bạn hãy đề xuất mức giá muốn mua.`,
-      time: new Date(),
-    }];
+    const chatMessages = [
+      {
+        type: "bot",
+        text: `Chao mung ban den voi phien thuong luong san pham "${bargainData.productName}". Gia niem yet: ${currency(bargainData.listedPrice)}. Ban hay de xuat muc gia muon mua.`,
+        time: new Date(),
+      },
+    ];
 
     let acceptedPrice = null;
 
@@ -30,17 +33,28 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
       bargainData.details.forEach((detail) => {
         chatMessages.push({
           type: "customer",
-          text: `Tôi muốn mua với giá ${currency(detail.customerPrice)}`,
+          text: `Toi muon mua voi gia ${currency(detail.customerPrice)}`,
           subtext: detail.customerMessage || "",
           time: detail.time,
         });
 
-        chatMessages.push({
-          type: "bot",
-          text: detail.botMessage,
-          subtext: detail.botPrice ? `Shop đề xuất: ${currency(detail.botPrice)}` : "",
-          time: detail.time,
-        });
+        if (detail.status === "pending") {
+          chatMessages.push({
+            type: "bot",
+            text: "Shop da nhan de xuat cua ban va se phan hoi trong 10 phut.",
+            subtext: detail.autoReplyAt
+              ? `Tu dong phan hoi luc ${dateTime(detail.autoReplyAt)} neu admin chua tra loi`
+              : "",
+            time: detail.time,
+          });
+        } else {
+          chatMessages.push({
+            type: "bot",
+            text: detail.botMessage || "",
+            subtext: detail.botPrice ? `Shop de xuat: ${currency(detail.botPrice)}` : "",
+            time: detail.time,
+          });
+        }
 
         if (detail.status === "accepted") {
           acceptedPrice = detail.botPrice || detail.customerPrice;
@@ -52,7 +66,7 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
     if (sessionStatus === "accepted" && acceptedPrice) {
       chatMessages.push({
         type: "bot",
-        text: "Bạn muốn mua số lượng bao nhiêu?",
+        text: "Ban muon mua so luong bao nhieu?",
         time: new Date(),
       });
     }
@@ -64,45 +78,58 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
     setFinalStatus(FINAL_STATUSES.includes(sessionStatus) ? sessionStatus : null);
   };
 
-  useEffect(() => {
-    const loadBargainDetails = async () => {
-      try {
-        setErrorMessage("");
-        const details = await bargainService.getById(bargain.bargainId);
-        let bargainData = bargain;
+  const loadBargainDetails = async (fallbackBargain = bargain) => {
+    try {
+      setErrorMessage("");
+      const details = await bargainService.getById(bargain.bargainId);
+      let bargainData = fallbackBargain;
 
-        if (Array.isArray(details) && details.length > 0) {
-          const rows = details.sort((a, b) => Number(a.round || 0) - Number(b.round || 0));
-          const detailRows = rows.filter((row) => Number(row.round || 0) > 0);
-          const latestRow = rows[rows.length - 1];
+      if (Array.isArray(details) && details.length > 0) {
+        const rows = [...details].sort((a, b) => Number(a.round || 0) - Number(b.round || 0));
+        const detailRows = rows.filter((row) => Number(row.round || 0) > 0);
+        const latestRow = rows[rows.length - 1];
 
-          bargainData = {
-            ...bargain,
-            ...latestRow,
-            sessionStatus: latestRow.sessionStatus || latestRow.status,
-            details: detailRows.map((row) => ({
-              round: row.round,
-              customerPrice: row.offerPrice,
-              botPrice: row.botPrice,
-              botMessage: row.botMessage || row.note || "",
-              customerMessage: row.customerMessage || "",
-              status: row.status,
-              time: row.time,
-              quantity: row.quantity,
-            })),
-          };
-        }
-
-        setBargainDetails(bargainData);
-        buildMessages(bargainData);
-      } catch (err) {
-        setErrorMessage(err.message || "Lỗi khi tải chi tiết phiên thương lượng");
-        buildMessages(bargain);
+        bargainData = {
+          ...fallbackBargain,
+          ...latestRow,
+          sessionStatus: latestRow.sessionStatus || latestRow.status,
+          details: detailRows.map((row) => ({
+            round: row.round,
+            customerPrice: row.offerPrice,
+            botPrice: row.botPrice,
+            botMessage: row.botMessage || row.note || "",
+            customerMessage: row.customerMessage || "",
+            status: row.status,
+            autoReplyAt: row.autoReplyAt,
+            responder: row.responder,
+            time: row.time,
+            quantity: row.quantity,
+          })),
+        };
       }
-    };
 
+      setBargainDetails(bargainData);
+      buildMessages(bargainData);
+    } catch (err) {
+      setErrorMessage(err.message || "Loi khi tai chi tiet phien thuong luong");
+      buildMessages(fallbackBargain);
+    }
+  };
+
+  useEffect(() => {
     loadBargainDetails();
   }, [bargain]);
+
+  useEffect(() => {
+    const latest = bargainDetails.details?.[bargainDetails.details.length - 1];
+    if (latest?.status !== "pending") return undefined;
+
+    const timer = setInterval(() => {
+      loadBargainDetails(bargainDetails);
+    }, POLL_INTERVAL_MS);
+
+    return () => clearInterval(timer);
+  }, [bargainDetails]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -111,24 +138,24 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
   const handleQuantitySubmit = () => {
     const quantity = Math.floor(Number(inputValue));
     if (!quantity || quantity < 1) {
-      setErrorMessage("Vui lòng nhập số lượng hợp lệ");
+      setErrorMessage("Vui long nhap so luong hop le");
       return;
     }
 
     const now = new Date();
-    setMessages((prev) => ([
+    setMessages((prev) => [
       ...prev,
       {
         type: "customer",
-        text: `Tôi muốn mua ${quantity} sản phẩm`,
+        text: `Toi muon mua ${quantity} san pham`,
         time: now,
       },
       {
         type: "bot",
-        text: `Shop đồng ý bán ${quantity} sản phẩm với giá ${currency(agreedPrice)}`,
+        text: `Shop dong y ban ${quantity} san pham voi gia ${currency(agreedPrice)}`,
         time: now,
       },
-    ]));
+    ]);
     setConfirmedQuantity(quantity);
     setAwaitingQuantity(false);
     setInputValue("");
@@ -137,7 +164,7 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
 
   const handlePriceSubmit = async () => {
     if (!inputValue || isNaN(inputValue)) {
-      setErrorMessage("Vui lòng nhập mức giá hợp lệ");
+      setErrorMessage("Vui long nhap muc gia hop le");
       return;
     }
 
@@ -160,24 +187,10 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
         botPrice: response.botPrice,
         botMessage: response.botMessage,
         status: response.status,
+        autoReplyAt: response.autoReplyAt,
         time: now,
         quantity: bargainDetails.quantity || 1,
       };
-
-      setMessages((prev) => ([
-        ...prev,
-        {
-          type: "customer",
-          text: `Tôi muốn mua với giá ${currency(price)}`,
-          time: now,
-        },
-        {
-          type: "bot",
-          text: response.botMessage,
-          subtext: response.botPrice ? `Shop đề xuất: ${currency(response.botPrice)}` : "",
-          time: now,
-        },
-      ]));
 
       setBargainDetails((prev) => ({
         ...prev,
@@ -185,17 +198,41 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
         details: [...(prev.details || []), nextDetail],
       }));
 
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: "customer",
+          text: `Toi muon mua voi gia ${currency(price)}`,
+          time: now,
+        },
+        response.status === "pending"
+          ? {
+              type: "bot",
+              text: "Shop da nhan de xuat cua ban va se phan hoi trong 10 phut.",
+              subtext: response.autoReplyAt
+                ? `Tu dong phan hoi luc ${dateTime(response.autoReplyAt)} neu admin chua tra loi`
+                : "",
+              time: now,
+            }
+          : {
+              type: "bot",
+              text: response.botMessage,
+              subtext: response.botPrice ? `Shop de xuat: ${currency(response.botPrice)}` : "",
+              time: now,
+            },
+      ]);
+
       if (response.status === "accepted") {
         setAgreedPrice(response.botPrice || price);
         setAwaitingQuantity(true);
-        setMessages((prev) => ([
+        setMessages((prev) => [
           ...prev,
           {
             type: "bot",
-            text: "Bạn muốn mua số lượng bao nhiêu?",
+            text: "Ban muon mua so luong bao nhieu?",
             time: new Date(),
           },
-        ]));
+        ]);
       }
 
       if (FINAL_STATUSES.includes(response.status)) {
@@ -204,7 +241,8 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
 
       setInputValue("");
     } catch (err) {
-      setErrorMessage(err.message || "Lỗi khi gửi đề xuất giá");
+      setErrorMessage(err.message || "Loi khi gui de xuat gia");
+      await loadBargainDetails(bargainDetails);
     } finally {
       setLoading(false);
     }
@@ -230,6 +268,8 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
   };
 
   const currentRound = bargainDetails.details?.length || 0;
+  const latestDetail = bargainDetails.details?.[bargainDetails.details.length - 1];
+  const isWaitingForShop = latestDetail?.status === "pending";
   const isFinished = FINAL_STATUSES.includes(finalStatus);
   const canOrder = finalStatus === "accepted" && confirmedQuantity && agreedPrice && !awaitingQuantity;
 
@@ -243,19 +283,28 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
               className="chat-status-badge"
               style={{
                 background:
-                  finalStatus === "accepted" ? "#16a34a" :
-                  finalStatus === "rejected" || finalStatus === "expired" ? "#dc2626" :
-                  "#eab308",
+                  finalStatus === "accepted"
+                    ? "#16a34a"
+                    : finalStatus === "rejected" || finalStatus === "expired"
+                      ? "#dc2626"
+                      : isWaitingForShop
+                        ? "#2563eb"
+                        : "#eab308",
               }}
             >
-              {finalStatus === "accepted" ? "Chấp nhận" :
-               finalStatus === "rejected" ? "Từ chối" :
-               finalStatus === "expired" ? "Hết hạn" :
-               `Vòng ${Math.min(currentRound + 1, 3)}/3`}
+              {finalStatus === "accepted"
+                ? "Chap nhan"
+                : finalStatus === "rejected"
+                  ? "Tu choi"
+                  : finalStatus === "expired"
+                    ? "Het han"
+                    : isWaitingForShop
+                      ? "Cho shop phan hoi"
+                      : `Vong ${Math.min(currentRound + 1, 3)}/3`}
             </span>
           </div>
-          <button className="close-btn" onClick={onClose} aria-label="Đóng phiên thương lượng">
-            ←
+          <button className="close-btn" onClick={onClose} aria-label="Dong phien thuong luong">
+            &larr;
           </button>
         </div>
 
@@ -275,36 +324,29 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
         </div>
 
         {errorMessage && (
-          <div
-            role="alert"
-            style={{
-              background: "#fef2f2",
-              borderTop: "1px solid #fecaca",
-              color: "#b91c1c",
-              fontSize: "14px",
-              padding: "10px 12px",
-            }}
-          >
+          <div role="alert" className="bargain-chat-error">
             {errorMessage}
           </div>
         )}
 
-        {(!isFinished || awaitingQuantity) && (
+        {isWaitingForShop && !awaitingQuantity && (
+          <div className="bargain-chat-waiting">
+            Dang cho shop phan hoi. Ban se tiep tuc gui gia sau khi shop tra loi.
+          </div>
+        )}
+
+        {(!isFinished || awaitingQuantity) && !isWaitingForShop && (
           <div className="bargain-chat-input">
             <input
               type="number"
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
-              placeholder={awaitingQuantity ? "Nhập số lượng muốn mua" : "Nhập mức giá của bạn (VNĐ)"}
+              placeholder={awaitingQuantity ? "Nhap so luong muon mua" : "Nhap muc gia cua ban (VND)"}
               disabled={loading}
               min={awaitingQuantity ? "1" : "1000"}
             />
-            <button
-              onClick={handleSendMessage}
-              disabled={loading || !inputValue}
-              className="btn btn-primary"
-            >
-              {loading ? "Đang gửi..." : "Gửi"}
+            <button onClick={handleSendMessage} disabled={loading || !inputValue} className="btn btn-primary">
+              {loading ? "Dang gui..." : "Gui"}
             </button>
           </div>
         )}
@@ -313,11 +355,11 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
           <div className="bargain-chat-actions">
             {finalStatus === "accepted" ? (
               <button onClick={handleAccept} className="btn btn-success" disabled={!canOrder}>
-                Đặt hàng ngay
+                Dat hang ngay
               </button>
             ) : (
               <button onClick={onClose} className="btn btn-outline">
-                Quay lại
+                Quay lai
               </button>
             )}
           </div>

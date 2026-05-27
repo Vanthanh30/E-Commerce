@@ -17,10 +17,19 @@ const bargainDetailSchema = new mongoose.Schema(
   status: {
     type: String,
     enum: [
+      "pending",
       "countered",
       "accepted",
       "rejected"
     ]
+  },
+
+  autoReplyAt: Date,
+
+  responder: {
+    type: String,
+    enum: ["admin", "auto", null],
+    default: null
   },
 
   time: {
