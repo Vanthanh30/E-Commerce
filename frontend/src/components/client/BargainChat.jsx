@@ -48,12 +48,22 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
             time: detail.time,
           });
         } else {
-          chatMessages.push({
-            type: "bot",
-            text: detail.botMessage || "",
-            subtext: detail.botPrice ? `Shop de xuat: ${currency(detail.botPrice)}` : "",
-            time: detail.time,
-          });
+          const botText = detail.botMessage?.trim() ||
+            (detail.status === "accepted"
+              ? `Shop chap nhan muc gia ${currency(detail.customerPrice)} cua ban.`
+              : detail.status === "rejected"
+                ? "Shop da tu choi de xuat cua ban."
+                : detail.status === "countered"
+                  ? "Shop chua the ban voi muc gia nay."
+                  : "");
+
+          if (botText) {
+            chatMessages.push({
+              type: "bot",
+              text: botText,
+              time: detail.time,
+            });
+          }
         }
 
         if (detail.status === "accepted") {
@@ -217,7 +227,6 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
           : {
               type: "bot",
               text: response.botMessage,
-              subtext: response.botPrice ? `Shop de xuat: ${currency(response.botPrice)}` : "",
               time: now,
             },
       ]);

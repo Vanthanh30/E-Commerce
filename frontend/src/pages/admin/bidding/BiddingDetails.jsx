@@ -99,8 +99,8 @@ function DetailRow({ label, value, className = "" }) {
 function BidCard({ item, onClick }) {
     const statusLabel = (() => {
         if (!item.trangThai) return null;
-        if (item.trangThai === "Đã chấp nhận") return { text: "Đã chấp nhận", cls: "bd-badge-accepted" };
-        if (item.trangThai === "Từ chối") return { text: "Từ chối", cls: "bd-badge-rejected" };
+        if (item.trangThai === "Da chap nhan") return { text: "Da chap nhan", cls: "bd-badge-accepted" };
+        if (item.trangThai === "Tu choi") return { text: "Tu choi", cls: "bd-badge-rejected" };
         return { text: item.trangThai, cls: "bd-badge-pending" };
     })();
 

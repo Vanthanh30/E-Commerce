@@ -281,8 +281,8 @@
 }
 
 .bd-badge-pending {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: #fef9c3;
+    color: #92400e;
 }
 
 /* ============================================================
@@ -736,4 +736,4 @@
     font-size: 0.75rem;
     text-align: center;
     font-weight: 600;
-}
+}
