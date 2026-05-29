@@ -8,13 +8,19 @@ export const useOrders = () => {
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
+    setError(null);
+    setOrders([]);
     try {
       const user = JSON.parse(sessionStorage.getItem("user"));
-      if (!user || !user.customerId) return;
+      if (!user || !user.customerId) {
+        setLoading(false);
+        return;
+      }
 
       const response = await orderService.getOrders(user.customerId);
       setOrders(response.data || response || []);
     } catch (err) {
+      setOrders([]);
       setError(err.message || "Lỗi khi tải danh sách đơn hàng.");
     } finally {
       setLoading(false);

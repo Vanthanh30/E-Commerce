@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { bargainService } from "../../services/client/bargainService";
+import { cartService } from "../../services/client/cartService";
 import { currency, dateTime } from "../../utils/formatters";
 import "./BargainChat.css";
 
@@ -43,6 +44,8 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
   const [awaitingQuantity, setAwaitingQuantity] = useState(false);
   const [confirmedQuantity, setConfirmedQuantity] = useState(null);
   const [agreedPrice, setAgreedPrice] = useState(null);
+  const [addedToCart, setAddedToCart] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
   const messagesEndRef = useRef(null);
 
   const buildMessages = (bargainData) => {
@@ -102,19 +105,66 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
     }
 
     const sessionStatus = bargainData.sessionStatus;
+    const productStock = bargainData.stock ?? 0;
+    const orderExpired =
+      bargainData.orderSessionExpiresAt &&
+      new Date() > new Date(bargainData.orderSessionExpiresAt);
+    const lastDetailTime =
+      new Date(bargainData.details?.[bargainData.details.length - 1]?.time || Date.now());
+    const quantityConversationTime = new Date(lastDetailTime.getTime() + 1000);
+
     if (sessionStatus === "accepted" && acceptedPrice) {
+      // Luôn hiển thị câu hỏi về số lượng
       chatMessages.push({
         type: "bot",
         text: "Bạn muốn mua số lượng bao nhiêu?",
+        subtext:
+          productStock > 0
+            ? `Còn hàng: ${productStock}`
+            : "Hiện tại sản phẩm đã hết hàng",
+        time: quantityConversationTime,
+      });
+
+      if (bargainData.confirmedQuantity) {
+        chatMessages.push({
+          type: "customer",
+          text: `Tôi muốn mua ${bargainData.confirmedQuantity} sản phẩm`,
+          time: quantityConversationTime,
+        });
+        chatMessages.push({
+          type: "bot",
+          text: `Shop đồng ý bán ${bargainData.confirmedQuantity} sản phẩm với giá ${currency(acceptedPrice * bargainData.confirmedQuantity)}`,
+          time: quantityConversationTime,
+        });
+      }
+    }
+
+    if (sessionStatus === "accepted" && orderExpired) {
+      chatMessages.push({
+        type: "bot",
+        text: "Phiên đặt hàng đã hết hạn. Cảm ơn bạn đã tham gia.",
+        time: new Date(),
+      });
+    }
+
+    if (sessionStatus === "expired") {
+      chatMessages.push({
+        type: "bot",
+        text: "Phiên thương lượng đã hết hạn. Không thể tiếp tục thỏa thuận.",
         time: new Date(),
       });
     }
 
     setMessages(chatMessages);
     setAgreedPrice(acceptedPrice);
-    setAwaitingQuantity(sessionStatus === "accepted");
-    setConfirmedQuantity(null);
+    setAwaitingQuantity(
+      sessionStatus === "accepted" &&
+      !bargainData.confirmedQuantity &&
+      !orderExpired,
+    );
+    setConfirmedQuantity(bargainData.confirmedQuantity || null);
     setFinalStatus(FINAL_STATUSES.includes(sessionStatus) ? sessionStatus : null);
+    setAddedToCart(Boolean(bargainData.addedToCart));
   };
 
   const loadBargainDetails = async (fallbackBargain = bargain) => {
@@ -142,8 +192,12 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
             autoReplyAt: row.autoReplyAt,
             responder: row.responder,
             time: row.time,
+            responseTime: row.responseTime || null,
             quantity: row.quantity,
           })),
+          confirmedQuantity: latestRow.confirmedQuantity || null,
+          orderSessionExpiresAt: latestRow.orderSessionExpiresAt || null,
+          addedToCart: Boolean(latestRow.addedToCart),
         };
       }
 
@@ -174,10 +228,43 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleQuantitySubmit = () => {
+  const handleQuantitySubmit = async () => {
     const quantity = Math.floor(Number(inputValue));
+    const productStock = bargainDetails.stock ?? 0;
+
     if (!quantity || quantity < 1) {
       setErrorMessage("Vui lòng nhập số lượng hợp lệ");
+      return;
+    }
+
+    if (productStock <= 0) {
+      setErrorMessage("Sản phẩm hiện đã hết hàng");
+      return;
+    }
+
+    if (quantity > productStock) {
+      const now = new Date();
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: "customer",
+          text: `Tôi muốn mua ${quantity} sản phẩm`,
+          time: now,
+        },
+        {
+          type: "bot",
+          text: `Còn hàng ${productStock} sản phẩm!`,
+          time: now,
+        },
+      ]);
+      setErrorMessage(`Số lượng tối đa hiện có là ${productStock}`);
+      return;
+    }
+
+    try {
+      await bargainService.confirm(bargainDetails.bargainId, { quantity });
+    } catch (err) {
+      await loadBargainDetails(bargainDetails);
       return;
     }
 
@@ -191,12 +278,13 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
       },
       {
         type: "bot",
-        text: `Shop đồng ý bán ${quantity} sản phẩm, mỗi sản phẩm với giá ${currency(agreedPrice)}`,
+        text: `Shop đồng ý bán ${quantity} sản phẩm với giá ${currency(agreedPrice)}`,
         time: now,
       },
     ]);
     setConfirmedQuantity(quantity);
     setAwaitingQuantity(false);
+    setBargainDetails((prev) => ({ ...prev, confirmedQuantity: quantity }));
     setInputValue("");
     setErrorMessage("");
   };
@@ -261,6 +349,7 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
       ]);
 
       if (response.status === "accepted") {
+        const productStock = bargainDetails.stock ?? 0;
         setAgreedPrice(response.botPrice || price);
         setAwaitingQuantity(true);
         setMessages((prev) => [
@@ -268,6 +357,10 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
           {
             type: "bot",
             text: "Bạn muốn mua số lượng bao nhiêu?",
+            subtext:
+              productStock > 0
+                ? `Còn hàng ${productStock} sản phẩm`
+                : "Hiện tại sản phẩm đã hết hàng",
             time: new Date(),
           },
         ]);
@@ -296,20 +389,69 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
   };
 
   const handleAccept = async () => {
-    await onComplete({
-      status: "accepted",
-      productId: bargainDetails.productId,
-      quantity: confirmedQuantity || bargainDetails.quantity || 1,
-      price: agreedPrice,
-    });
-    onClose();
+    const orderExpired =
+      bargainDetails.orderSessionExpiresAt &&
+      new Date() > new Date(bargainDetails.orderSessionExpiresAt);
+    const productStock = bargainDetails.stock ?? 0;
+    const quantity = confirmedQuantity || bargainDetails.quantity || 1;
+
+    if (orderExpired) {
+      setErrorMessage("Phiên đặt hàng đã hết hạn. Cảm ơn bạn đã tham gia");
+      return;
+    }
+
+    if (productStock <= 0) {
+      setErrorMessage("Sản phẩm hiện đã hết hàng");
+      return;
+    }
+
+    if (quantity > productStock) {
+      setErrorMessage(`Số lượng tối đa hiện có là ${productStock}`);
+      return;
+    }
+
+    try {
+      setAddingToCart(true);
+      setErrorMessage("");
+      const user = JSON.parse(sessionStorage.getItem("user"));
+      if (!user || !user.customerId) {
+        setAddingToCart(false);
+        setErrorMessage("Không tìm thấy thông tin người dùng");
+        return;
+      }
+
+      await cartService.addToCart({
+        customerId: user.customerId,
+        productId: bargainDetails.productId,
+        bargainId: bargainDetails.bargainId,
+        quantity,
+        price: agreedPrice,
+      });
+
+      setAddedToCart(true);
+      setBargainDetails((prev) => ({ ...prev, addedToCart: true }));
+    } catch (err) {
+      setErrorMessage(err.message || "Lỗi khi thêm vào giỏ hàng");
+    }
+    setAddingToCart(false);
   };
 
   const currentRound = bargainDetails.details?.length || 0;
   const latestDetail = bargainDetails.details?.[bargainDetails.details.length - 1];
-  const isWaitingForShop = latestDetail?.status === "pending";
+  const productStock = bargainDetails.stock ?? 0;
+  const orderExpired =
+    bargainDetails.orderSessionExpiresAt &&
+    new Date() > new Date(bargainDetails.orderSessionExpiresAt);
+  const sessionExpired = bargainDetails.sessionStatus === "expired";
+  const isWaitingForShop = latestDetail?.status === "pending" && !sessionExpired;
   const isFinished = FINAL_STATUSES.includes(finalStatus);
-  const canOrder = finalStatus === "accepted" && confirmedQuantity && agreedPrice && !awaitingQuantity;
+  const canOrder =
+    finalStatus === "accepted" &&
+    confirmedQuantity &&
+    agreedPrice &&
+    !awaitingQuantity &&
+    !orderExpired &&
+    productStock > 0;
 
   return (
     <div className="bargain-chat-modal">
@@ -340,6 +482,13 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
                       ? "Chờ shop phản hồi"
                       : `Vòng ${Math.min(currentRound + 1, 3)}/3`}
             </span>
+            {finalStatus === "accepted" && bargainDetails.orderSessionExpiresAt && (
+              <div className="chat-order-expiry">
+                {orderExpired
+                  ? "Phiên đặt hàng đã hết hạn"
+                  : `Thời hạn đặt hàng: ${dateTime(bargainDetails.orderSessionExpiresAt)}`}
+              </div>
+            )}
           </div>
           <button className="close-btn" onClick={onClose} aria-label="Đóng phiên thương lượng">
             &larr;
@@ -367,7 +516,7 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
           </div>
         )}
 
-        {isWaitingForShop && !awaitingQuantity && (
+        {isWaitingForShop && !awaitingQuantity && !orderExpired && (
           <div className="bargain-chat-waiting">
             Đang chờ shop phản hồi. Bạn sẽ tiếp tục gửi giá sau khi shop trả lời.
           </div>
@@ -380,10 +529,19 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
               placeholder={awaitingQuantity ? "Nhập số lượng muốn mua" : "Nhập mức giá của bạn (VND)"}
-              disabled={loading}
+              disabled={loading || (awaitingQuantity && (orderExpired || productStock <= 0))}
               min={awaitingQuantity ? "1" : "1000"}
+              max={awaitingQuantity ? productStock || undefined : undefined}
             />
-            <button onClick={handleSendMessage} disabled={loading || !inputValue} className="btn btn-primary">
+            <button
+              onClick={handleSendMessage}
+              disabled={
+                loading ||
+                !inputValue ||
+                (awaitingQuantity && (orderExpired || productStock <= 0))
+              }
+              className="btn btn-primary"
+            >
               {loading ? "Đang gửi..." : "Gửi"}
             </button>
           </div>
@@ -391,9 +549,26 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
 
         {isFinished && !awaitingQuantity && (
           <div className="bargain-chat-actions">
-            {finalStatus === "accepted" ? (
-              <button onClick={handleAccept} className="btn btn-success" disabled={!canOrder}>
-                Đặt hàng ngay
+            {finalStatus === "accepted" && !orderExpired && !addedToCart ? (
+              <button
+                onClick={handleAccept}
+                className="btn btn-success"
+                disabled={!canOrder || addingToCart}
+              >
+                {addingToCart ? "Đang xử lý..." : "Đặt hàng ngay"}
+              </button>
+            ) : addedToCart ? (
+              <button
+                className="btn"
+                disabled
+                style={{
+                  background: "#d1d5db",
+                  color: "#6b7280",
+                  border: "none",
+                  cursor: "not-allowed",
+                }}
+              >
+                Đã thêm vào giỏ
               </button>
             ) : (
               <button onClick={onClose} className="btn btn-outline">

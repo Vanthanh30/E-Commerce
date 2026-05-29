@@ -15,9 +15,11 @@ const mapToFrontend = (b) => ({
     giaBan: b.botPrice || b.offerPrice,
     thoiGian: b.time ? new Date(b.time).toLocaleString("vi-VN") : "",
     trangThai:
-        b.status === "accepted" ? "Da chap nhan" :
-        b.status === "rejected" ? "Tu choi" :
+        b.sessionStatus === "expired" ? "Het han" :
+        b.sessionStatus === "accepted" ? "Da chap nhan" :
+        b.sessionStatus === "rejected" ? "Tu choi" :
         b.status === "countered" ? "Cho khach phan hoi" :
+        b.status === "pending" ? "Cho khach phan hoi" :
         "Dang cho admin",
     ghiChu: b.note || ""
 });
@@ -101,6 +103,7 @@ function BidCard({ item, onClick }) {
         if (!item.trangThai) return null;
         if (item.trangThai === "Da chap nhan") return { text: "Da chap nhan", cls: "bd-badge-accepted" };
         if (item.trangThai === "Tu choi") return { text: "Tu choi", cls: "bd-badge-rejected" };
+        if (item.trangThai === "Het han") return { text: "Het han", cls: "bd-badge-expired" };
         return { text: item.trangThai, cls: "bd-badge-pending" };
     })();
 

@@ -1,5 +1,6 @@
 import CartItem from "../models/cartItem.model.js";
 import Product from "../models/product.model.js";
+import Bargain from "../models/bargain.model.js";
 import mongoose from "mongoose";
 
 let cartIndexesReady = false;
@@ -57,6 +58,7 @@ export async function addToCart(req, res) {
   await ensureCartIndexes();
   const customerId = req.body.customerId;
   const productId = req.body.productId;
+  const bargainId = req.body.bargainId || null;
   const quantity = Number(req.body.quantity || 1);
   const salePrice = req.body.price == null ? null : Number(req.body.price);
   const product = await Product.findOne({ productId, status: 1 }).lean();
@@ -64,6 +66,39 @@ export async function addToCart(req, res) {
   if (!product) {
     res.status(404).json({ message: "Product not found" });
     return;
+  }
+
+  let bargain = null;
+  if (bargainId) {
+    bargain = await Bargain.findOne({ bargainId });
+
+    if (!bargain) {
+      res.status(404).json({ message: "Bargain not found" });
+      return;
+    }
+
+    if (bargain.customerId !== customerId || bargain.productId !== productId) {
+      res.status(400).json({ message: "Bargain does not match cart item" });
+      return;
+    }
+
+    if (bargain.status !== "accepted") {
+      res.status(400).json({ message: "Bargain is not accepted" });
+      return;
+    }
+
+    if (
+      bargain.orderSessionExpiresAt &&
+      new Date() > new Date(bargain.orderSessionExpiresAt)
+    ) {
+      res.status(400).json({ message: "Bargain order session expired" });
+      return;
+    }
+
+    if (bargain.addedToCart) {
+      res.status(409).json({ message: "Bargain already added to cart" });
+      return;
+    }
   }
 
   const normalizedSalePrice = salePrice != null && salePrice > 0 ? salePrice : null;
@@ -78,6 +113,11 @@ export async function addToCart(req, res) {
       quantity: Math.min(quantity, product.stock || quantity),
       salePrice: normalizedSalePrice
     });
+  }
+
+  if (bargain) {
+    bargain.addedToCart = true;
+    await bargain.save();
   }
 
   res.status(201).json(await getCartItems(customerId));

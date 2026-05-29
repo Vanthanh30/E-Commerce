@@ -12,4 +12,6 @@ export const bargainService = {
 
   // Lấy chi tiết phiên bargain (tất cả vòng)
   getById: (bargainId) => api.get(`/bargains/${bargainId}`),
+
+  confirm: (bargainId, data) => api.post(`/bargains/${bargainId}/confirm`, data),
 };

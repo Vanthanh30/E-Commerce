@@ -4,7 +4,8 @@ import {
   getBargain,
   listBargains,
   respondBargain,
-  chatBargain
+  chatBargain,
+  confirmBargain,
 } from "../controllers/bargain.controller.js";
 import { asyncHandler } from "../helpers/asyncHandler.js";
 
@@ -17,5 +18,6 @@ router.post("/chat", asyncHandler(chatBargain));
 router.get("/:id", asyncHandler(getBargain));
 router.post("/", asyncHandler(createBargain));
 router.post("/:id/respond", asyncHandler(respondBargain));
+router.post("/:id/confirm", asyncHandler(confirmBargain));
 
 export default router;

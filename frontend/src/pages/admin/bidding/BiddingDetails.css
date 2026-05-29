@@ -280,6 +280,11 @@
     color: #b91c1c;
 }
 
+.bd-badge-expired {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
 .bd-badge-pending {
     background: #fef9c3;
     color: #92400e;

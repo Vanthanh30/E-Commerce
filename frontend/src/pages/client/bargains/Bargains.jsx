@@ -103,6 +103,7 @@ const Bargains = () => {
       await cartService.addToCart({
         customerId: user.customerId,
         productId,
+        bargainId: activeBargain?.bargainId,
         quantity,
         price,
       });

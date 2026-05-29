@@ -292,8 +292,9 @@ function ListView({ tab, onDetail }) {
       if (tab === "cancel") statusId = 5;
 
       // Vì BE đã tự nhóm item vào mảng, ta chỉ cần nhận dữ liệu trực tiếp
-      const data = await orderService.getAll({ status: statusId });
-      setItems(data || []);
+      const response = await orderService.getAll({ status: statusId });
+      const data = response.data || response || [];
+      setItems(data);
     } catch (error) {
       console.error("Lỗi tải đơn hàng:", error);
     } finally {

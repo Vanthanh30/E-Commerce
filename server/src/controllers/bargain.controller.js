@@ -1,13 +1,13 @@
 import Bargain from "../models/bargain.model.js";
 import Customer from "../models/customer.model.js";
 import Product from "../models/product.model.js";
-import { createSingleItemOrder } from "../helpers/order.helper.js";
 import { bargainStatus } from "../helpers/status.helper.js";
 import { processBargain } from "../services/bargain.service.js";
 
 const MAX_BARGAIN_ROUNDS = 3;
-const SESSION_MINUTES = 20;
 const AUTO_RESPONSE_MINUTES = 1;
+const SESSION_MINUTES = 30;
+const ORDER_SESSION_HOURS = 24;
 
 function isFinal(status) {
   return ["accepted", "rejected"].includes(status);
@@ -37,6 +37,7 @@ async function markExpiredBargains(filter = {}) {
 
 async function applyAutoResponse(bargain, product = null) {
   if (!bargain || bargain.status !== "negotiating") return bargain;
+  
 
   const latest = lastDetail(bargain);
   if (
@@ -62,10 +63,15 @@ async function applyAutoResponse(bargain, product = null) {
   latest.botMessage = result.botMessage;
   latest.status = result.status;
   latest.responder = "auto";
-  latest.time = new Date();
+  latest.responseTime = new Date();
+  // Keep original time for customer message, don't update it
 
   if (isFinal(result.status)) {
     bargain.status = result.status;
+
+    if (result.status === "accepted") {
+      bargain.orderSessionExpiresAt = new Date(Date.now() + ORDER_SESSION_HOURS * 60 * 60 * 1000);
+    }
   }
 
   await bargain.save();
@@ -98,6 +104,51 @@ async function makeBargainId(customerId, productId) {
   const existing = await Bargain.findOne({ bargainId: baseId }).lean();
   const suffix = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   return existing ? `${baseId}_${suffix}` : baseId;
+}
+
+export async function confirmBargain(req, res) {
+  const { quantity } = req.body;
+  const bargain = await Bargain.findOne({ bargainId: req.params.id });
+  if (!bargain) {
+    return res.status(404).json({ message: "Bargain not found" });
+  }
+
+  if (isExpired(bargain)) {
+    await expireBargain(bargain);
+    return res.status(400).json({ message: "Bargain session expired" });
+  }
+
+  if (bargain.status !== "accepted") {
+    return res.status(400).json({ message: "Bargain is not in accepted state" });
+  }
+
+  const confirmedQuantity = Number(quantity || 0);
+  if (!confirmedQuantity || confirmedQuantity < 1) {
+    return res.status(400).json({ message: "Invalid quantity" });
+  }
+
+  const product = await Product.findOne({ productId: bargain.productId });
+  if (!product) {
+    return res.status(404).json({ message: "Product not found" });
+  }
+
+  if (product.stock <= 0) {
+    return res.status(400).json({ message: "Sản phẩm hiện đã hết hàng" });
+  }
+
+  if (confirmedQuantity > product.stock) {
+    return res.status(400).json({ message: `Số lượng tối đa hiện có là ${product.stock}` });
+  }
+
+  bargain.confirmedQuantity = confirmedQuantity;
+
+  const acceptedDetail = bargain.details.find((detail) => detail.status === "accepted");
+  if (acceptedDetail) {
+    acceptedDetail.quantity = confirmedQuantity;
+  }
+
+  await bargain.save();
+  res.json({ bargainId: bargain.bargainId, confirmedQuantity });
 }
 
 function lastDetail(bargain) {
@@ -135,11 +186,15 @@ async function bargainRows({ customerId = null, id = null } = {}) {
         listedPrice: product.fixedPrice || 0,
         minPrice: product.minPrice || 0,
         quantity: bargain.quantity || 1,
+        stock: product.stock || 0,
         productId: bargain.productId,
         customerName: customer.fullName || "",
         address: customer.address || "",
         expiredAt: bargain.expiredAt,
         sessionStatus: bargain.status,
+        confirmedQuantity: bargain.confirmedQuantity || null,
+        orderSessionExpiresAt: bargain.orderSessionExpiresAt || null,
+        addedToCart: Boolean(bargain.addedToCart),
       };
 
       if (!bargain.details.length) {
@@ -170,6 +225,7 @@ async function bargainRows({ customerId = null, id = null } = {}) {
         autoReplyAt: detail.autoReplyAt,
         responder: detail.responder || null,
         time: detail.time,
+        responseTime: detail.responseTime || null,
         quantity: detail.quantity || bargain.quantity || 1,
         round: detail.round,
         status: detail.status,
@@ -270,15 +326,25 @@ export async function createBargain(req, res) {
 export async function respondBargain(req, res) {
   const currentRound = Number(req.body.round);
   const bargain = await Bargain.findOne({ bargainId: req.params.id });
+  
+  if (!bargain) {
+    res.status(404).json({ message: "Bargain not found" });
+    return;
+  }
+
+  // Ensure any due auto-response is applied before treating the session as expired
   await applyAutoResponse(bargain);
-  const customer = bargain
-    ? await Customer.findOne({ customerId: bargain.customerId }).lean()
-    : null;
+
+  if (isExpired(bargain)) {
+    await expireBargain(bargain);
+    return res.status(400).json({ message: "Bargain session expired" });
+  }
+  const customer = await Customer.findOne({ customerId: bargain.customerId }).lean();
   const current = bargain?.details.find(
     (item) => Number(item.round) === currentRound,
   );
 
-  if (!bargain || !current) {
+  if (!current) {
     res.status(404).json({ message: "Bargain round not found" });
     return;
   }
@@ -307,16 +373,7 @@ export async function respondBargain(req, res) {
 
   if (action === "accept") {
     nextStatus = "accepted";
-    const order = await createSingleItemOrder({
-      customerId: bargain.customerId,
-      productId: bargain.productId,
-      quantity,
-      price,
-      address: customer?.address || "",
-      paymentMethod: 0,
-      status: 1,
-    });
-    invoiceId = order.orderId;
+    bargain.orderSessionExpiresAt = new Date(Date.now() + ORDER_SESSION_HOURS * 60 * 60 * 1000);
   } else if (action === "reject") {
     nextStatus = "rejected";
   } else if (action === "counter") {
@@ -355,7 +412,6 @@ export async function respondBargain(req, res) {
     botPrice: current.botPrice,
     botMessage: current.botMessage,
     statusText: bargainStatus(current.round, nextStatus),
-    invoiceId,
   });
 }
 
@@ -375,10 +431,6 @@ export async function chatBargain(req, res) {
         status: "negotiating",
       }).sort({ updatedAt: -1 });
 
-  if (bargain) {
-    await applyAutoResponse(bargain, product);
-  }
-
   if (!bargain) {
     const nextBargainId = await makeBargainId(customerId, productId);
     bargain = await Bargain.create({
@@ -388,6 +440,11 @@ export async function chatBargain(req, res) {
       expiredAt: new Date(Date.now() + SESSION_MINUTES * 60 * 1000),
       details: [],
     });
+  }
+
+  // Apply any due auto-response first so bot can reply before marking expired
+  if (bargain) {
+    await applyAutoResponse(bargain, product);
   }
 
   if (isExpired(bargain)) {

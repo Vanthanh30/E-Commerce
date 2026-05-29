@@ -35,7 +35,12 @@ const bargainDetailSchema = new mongoose.Schema(
   time: {
     type: Date,
     default: Date.now
-  }
+  },
+
+  responseTime: Date,
+
+  confirmedQuantity: Number,
+  orderSessionExpiresAt: Date
 },
 { _id: false }
 );
@@ -46,6 +51,9 @@ const bargainSchema = new mongoose.Schema(
     customerId: { type: String, required: true, index: true },
     productId: { type: String, required: true, index: true },
     quantity: { type: Number, default: 1 },
+    confirmedQuantity: { type: Number, default: null },
+    orderSessionExpiresAt: { type: Date, default: null },
+    addedToCart: { type: Boolean, default: false },
 
       //Bargain status
     status: {
