@@ -33,7 +33,7 @@ export async function getProduct(req, res) {
   const product = await Product.findOneAndUpdate(
     { productId: req.params.id },
     { $inc: { views: 1 } },
-    { new: true },
+    { returnDocument: "after" },
   ).lean();
 
   if (!product) {

@@ -367,7 +367,20 @@ export async function respondBargain(req, res) {
   const action = req.body.action;
   const price = Number(req.body.price || current.customerPrice || 0);
   const quantity = Number(req.body.quantity || current.quantity || 1);
-  const note = req.body.note || current.botMessage || "";
+  let note = req.body.note || "";
+
+    if (!note) {
+      if (action === "accept") {
+        note = `Shop đồng ý mức giá ${price} VND`;
+      } 
+      else if (action === "reject") {
+        note = `Shop từ chối mức giá ${current.customerPrice} VND`;
+      } 
+      else if (action === "counter") {
+        note = `Shop chưa thể bán với mức giá ${current.customerPrice} VND`;
+      }
+    }
+
   let invoiceId = null;
   let nextStatus;
 

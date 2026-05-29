@@ -8,27 +8,42 @@ const FINAL_STATUSES = ["accepted", "rejected", "expired"];
 const POLL_INTERVAL_MS = 10000;
 const SHOP_RESPONSE_MINUTES = 1;
 
-function normalizeBotMessage(message) {
+function normalizeBotMessage(message, fallbackPrice = null) {
   const text = message?.trim();
+
   if (!text) return "";
 
-  if (text === "Shop dong y muc gia") {
-    return "Shop đồng ý mức giá";
+  const safePrice =
+    Number.isFinite(Number(fallbackPrice))
+      ? currency(Number(fallbackPrice))
+      : null;
+
+  // ACCEPTED
+  if (/^Shop\s+(?:đồng ý|dong y)\s+mức giá/i.test(text)) {
+    return safePrice
+      ? `Shop đồng ý mức giá ${safePrice}.`
+      : text;
   }
 
-  const acceptedMatch = text.match(/^Shop dong y muc gia\s+(.+)\s+VND$/i);
-  if (acceptedMatch) {
-    return `Shop đồng ý mức giá ${currency(acceptedMatch[1])}.`;
+  // REJECTED
+  if (/^Shop\s+(?:từ chối|tu choi)\s+mức giá/i.test(text)) {
+    return safePrice
+      ? `Shop từ chối mức giá ${safePrice}. Cảm ơn bạn đã tham gia mặc cả.`
+      : text;
   }
 
-  const rejectedMatch = text.match(/^Shop tu choi muc gia\s+(.+)\s+VND/i);
-  if (rejectedMatch) {
-    return `Shop từ chối mức giá ${currency(rejectedMatch[1])}. Cảm ơn bạn đã tham gia mặc cả.`;
+  // COUNTERED
+  if (/^Shop\s+chưa thể bán với mức giá/i.test(text)) {
+    return safePrice
+      ? `Shop chưa thể bán với mức giá ${safePrice}.`
+      : text;
   }
 
   const legacyMessages = {
-    "Shop chua the ban voi muc gia nay.": "Shop chưa thể bán với mức giá này.",
-    "Shop da tu choi de xuat cua ban.": "Shop đã từ chối đề xuất của bạn.",
+    "Shop chua the ban voi muc gia nay.":
+      "Shop chưa thể bán với mức giá này.",
+    "Shop da tu choi de xuat cua ban.":
+      "Shop đã từ chối đề xuất của bạn.",
   };
 
   return legacyMessages[text] || text;
@@ -78,7 +93,10 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
             time: detail.time,
           });
         } else {
-          const note = normalizeBotMessage(detail.botMessage);
+          const note = normalizeBotMessage(
+            detail.botMessage,
+            detail.customerPrice
+          );
           const botText =
             detail.status === "accepted"
               ? note || `Shop chấp nhận mức giá ${currency(detail.botPrice || detail.customerPrice)} của bạn.`
@@ -92,7 +110,12 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
             chatMessages.push({
               type: "bot",
               text: botText,
-              subtext: detail.status === "countered" ? currency(detail.botPrice) : "",
+              subtext:
+              detail.status === "countered" &&
+              detail.responder === "admin"  &&
+              detail.botPrice
+                ? "Giá đề xuất: " + currency(detail.botPrice)
+                : "",
               time: detail.time,
             });
           }
@@ -278,7 +301,7 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
       },
       {
         type: "bot",
-        text: `Shop đồng ý bán ${quantity} sản phẩm với giá ${currency(agreedPrice)}`,
+        text: `Shop đồng ý bán ${quantity} sản phẩm với giá ${currency(agreedPrice * quantity)}`,
         time: now,
       },
     ]);
@@ -343,17 +366,29 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
           }
           : {
             type: "bot",
-            text: normalizeBotMessage(response.botMessage),
+            text: normalizeBotMessage(response.botMessage, price),
+            subtext:
+              response.status === "countered" &&
+              response.responder === "admin"
+                ? currency(response.botPrice)
+                : "",
             time: now,
           },
       ]);
 
       if (response.status === "accepted") {
         const productStock = bargainDetails.stock ?? 0;
+
         setAgreedPrice(response.botPrice || price);
         setAwaitingQuantity(true);
+
         setMessages((prev) => [
           ...prev,
+          {
+            type: "bot",
+            text: normalizeBotMessage(response.botMessage, price),
+            time: now,
+          },
           {
             type: "bot",
             text: "Bạn muốn mua số lượng bao nhiêu?",

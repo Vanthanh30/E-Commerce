@@ -133,7 +133,7 @@ export async function updateOrderStatus(req, res) {
   const order = await Order.findOneAndUpdate(
     { orderId: req.params.id },
     { $set: { status } },
-    { new: true },
+    { returnDocument: "after" },
   ).lean();
 
   if (!order) {

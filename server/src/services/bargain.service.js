@@ -58,6 +58,6 @@ export function processBargain({ product, offerPrice, round }) {
   return {
     status: "countered",
     botPrice: requiredPrice,
-    botMessage: "Shop chưa thể bán với mức giá ${offer} VND.",
+    botMessage: `Shop chưa thể bán với mức giá ${offer} VND.`,
   };
 }
