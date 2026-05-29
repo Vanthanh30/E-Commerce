@@ -7,7 +7,7 @@ import { processBargain } from "../services/bargain.service.js";
 
 const MAX_BARGAIN_ROUNDS = 3;
 const SESSION_MINUTES = 20;
-const AUTO_RESPONSE_MINUTES = 10;
+const AUTO_RESPONSE_MINUTES = 1;
 
 function isFinal(status) {
   return ["accepted", "rejected"].includes(status);
@@ -155,7 +155,7 @@ async function bargainRows({ customerId = null, id = null } = {}) {
             round: 0,
             status: bargain.status,
             statusText:
-              bargain.status === "expired" ? "Het han" : "Dang thuong luong",
+              bargain.status === "expired" ? "Hết hạn" : "Đang thương lượng",
           },
         ];
       }
@@ -402,7 +402,7 @@ export async function chatBargain(req, res) {
   const latest = lastDetail(bargain);
   if (latest?.status === "pending") {
     return res.status(409).json({
-      message: "Shop is reviewing your latest offer",
+      message: "Shop đang xem xét đề xuất mới nhất của bạn",
       bargainId: bargain.bargainId,
       round: latest.round,
       status: latest.status,
@@ -412,7 +412,7 @@ export async function chatBargain(req, res) {
 
   const round = bargain.details.length + 1;
   if (round > MAX_BARGAIN_ROUNDS) {
-    return res.status(400).json({ message: "Phien mac ca da ket thuc" });
+    return res.status(400).json({ message: "Phiên mặc cả đã kết thúc" });
   }
 
   const customerPrice = Number(offerPrice);

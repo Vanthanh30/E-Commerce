@@ -43,7 +43,7 @@ export function processBargain({ product, offerPrice, round }) {
     return {
       status: "accepted",
       botPrice: offer,
-      botMessage: `Shop dong y muc gia ${offer} VND`,
+      botMessage: `Shop đồng ý mức giá ${offer} VND`,
     };
   }
 
@@ -51,13 +51,13 @@ export function processBargain({ product, offerPrice, round }) {
     return {
       status: "rejected",
       botPrice: requiredPrice,
-      botMessage: `Shop tu choi muc gia ${offer} VND. Cam on ban da tham gia mac ca`,
+      botMessage: `Shop từ chối mức giá ${offer} VND. Cảm ơn bạn đã tham gia mặc cả`,
     };
   }
 
   return {
     status: "countered",
     botPrice: requiredPrice,
-    botMessage: "Shop chua the ban voi muc gia nay.",
+    botMessage: "Shop chưa thể bán với mức giá này.",
   };
 }
