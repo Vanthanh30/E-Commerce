@@ -6,7 +6,7 @@ import "../../../assets/history-list.css";
 
 const Orders = () => {
   const navigate = useNavigate();
-  const { orders, loading, error } = useOrders();
+  const { orders, loading, error, cancelOrder } = useOrders();
 
   useEffect(() => {
     if (!sessionStorage.getItem("user")) navigate("/login");
@@ -42,7 +42,11 @@ const Orders = () => {
         </p>
       ) : (
         orders.map((item, index) => (
-          <OrderItem key={`${item.orderId}-${index}`} item={item} />
+          <OrderItem
+            key={`${item.orderId}-${index}`}
+            item={item}
+            onCancel={cancelOrder}
+          />
         ))
       )}
     </div>

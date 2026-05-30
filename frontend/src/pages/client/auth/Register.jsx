@@ -4,6 +4,9 @@ import { authService } from "../../../services/client/authService";
 import { assetUrl } from "../../../utils/formatters";
 import "./auth.css";
 
+const USERNAME_PATTERN = /^[A-Za-zÀ-ỹ][A-Za-zÀ-ỹ0-9_]*$/;
+const PHONE_PATTERN = /^0(3|5|7|8|9)\d{8}$/;
+
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -15,8 +18,13 @@ const Register = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const nextValue =
+      name === "phoneNumber" ? value.replace(/\D/g, "").slice(0, 10) : value;
+
+    setFormData({ ...formData, [name]: nextValue });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

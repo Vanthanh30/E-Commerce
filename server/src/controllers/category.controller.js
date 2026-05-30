@@ -8,10 +8,16 @@ export async function listCategories(req, res) {
 }
 
 export async function createCategory(req, res) {
+  const name = String(req.body.name || "").trim();
+  if (!name) {
+    res.status(400).json({ message: "Category name is required" });
+    return;
+  }
+
   const categoryId = await nextCode(Category, "categoryId", "DM");
   const category = await Category.create({
     categoryId,
-    name: req.body.name,
+    name,
     description: req.body.description || null,
     status: 1
   });
@@ -20,11 +26,17 @@ export async function createCategory(req, res) {
 }
 
 export async function updateCategory(req, res) {
+  const name = String(req.body.name || "").trim();
+  if (!name) {
+    res.status(400).json({ message: "Category name is required" });
+    return;
+  }
+
   await Category.updateOne(
     { categoryId: req.params.id },
     {
       $set: {
-        name: req.body.name,
+        name,
         description: req.body.description || null
       }
     }

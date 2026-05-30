@@ -27,6 +27,26 @@
   border-bottom: 1px solid var(--border, #eee);
 }
 
+.cart-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text, #191919);
+  cursor: pointer;
+}
+
+.cart-select-all input,
+.cart-item-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary, #1f6c55);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
 .cart-item-image {
   width: 90px;
   height: 90px;

@@ -12,6 +12,7 @@ const ProductDetail = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -32,13 +33,23 @@ const ProductDetail = () => {
     if (!userStr) return navigate("/login");
 
     const user = JSON.parse(userStr);
+    const requestedQuantity = Math.floor(Number(quantity));
+    if (!requestedQuantity || requestedQuantity < 1) {
+      alert("Vui lòng chọn số lượng hợp lệ.");
+      return;
+    }
+    if (requestedQuantity > Number(product.stock || 0)) {
+      alert(`Số lượng tối đa hiện có là ${product.stock}.`);
+      return;
+    }
+
     setAddingToCart(true);
 
     try {
       await cartService.addToCart({
         customerId: user.customerId,
         productId: product.productId,
-        quantity: 1,
+        quantity: requestedQuantity,
       });
       alert("Đã thêm sản phẩm vào giỏ hàng!");
     } catch (err) {
@@ -84,11 +95,41 @@ const ProductDetail = () => {
           </div>
 
           <div className="action-group">
+            <div className="product-quantity-control">
+              <button
+                type="button"
+                className="quantity-btn"
+                onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+                disabled={quantity <= 1}
+              >
+                -
+              </button>
+              <input
+                type="number"
+                min="1"
+                max={product.stock || 1}
+                value={quantity}
+                onChange={(event) => {
+                  const next = Math.floor(Number(event.target.value || 1));
+                  setQuantity(Math.min(Math.max(next, 1), product.stock || 1));
+                }}
+              />
+              <button
+                type="button"
+                className="quantity-btn"
+                onClick={() =>
+                  setQuantity((value) => Math.min(value + 1, product.stock || 1))
+                }
+                disabled={quantity >= Number(product.stock || 0)}
+              >
+                +
+              </button>
+            </div>
             <div className="action-row">
               <button
                 className="btn btn-primary"
                 onClick={handleAddToCart}
-                disabled={addingToCart}
+                disabled={addingToCart || product.stock <= 0}
               >
                 {addingToCart ? "Đang xử lý..." : "Thêm vào giỏ"}
               </button>

@@ -59,12 +59,22 @@ export async function addToCart(req, res) {
   const customerId = req.body.customerId;
   const productId = req.body.productId;
   const bargainId = req.body.bargainId || null;
-  const quantity = Number(req.body.quantity || 1);
+  const quantity = Math.floor(Number(req.body.quantity || 1));
   const salePrice = req.body.price == null ? null : Number(req.body.price);
+
+  if (!customerId || !productId || !Number.isInteger(quantity) || quantity < 1) {
+    res.status(400).json({ message: "Invalid cart item" });
+    return;
+  }
   const product = await Product.findOne({ productId, status: 1 }).lean();
 
   if (!product) {
     res.status(404).json({ message: "Product not found" });
+    return;
+  }
+
+  if (Number(product.stock || 0) <= 0) {
+    res.status(400).json({ message: "Product is out of stock" });
     return;
   }
 
@@ -101,6 +111,11 @@ export async function addToCart(req, res) {
     }
   }
 
+  if (salePrice != null && (!Number.isFinite(salePrice) || salePrice <= 0)) {
+    res.status(400).json({ message: "Invalid sale price" });
+    return;
+  }
+
   const normalizedSalePrice = salePrice != null && salePrice > 0 ? salePrice : null;
   const existing = await CartItem.findOne({ customerId, productId, salePrice: normalizedSalePrice });
   if (existing) {
@@ -135,8 +150,14 @@ export async function updateCartItem(req, res) {
   }
 
   const product = await Product.findOne({ productId: cartItem.productId }).lean();
+  const requestedQuantity = Math.floor(Number(req.body.quantity || 1));
+  if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1) {
+    res.status(400).json({ message: "Invalid quantity" });
+    return;
+  }
+
   const quantity = Math.min(
-    Math.max(1, Number(req.body.quantity || 1)),
+    requestedQuantity,
     Number(product?.stock || req.body.quantity || 1)
   );
 

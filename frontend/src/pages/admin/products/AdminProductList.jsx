@@ -201,6 +201,23 @@ const EMPTY_FORM = {
     giaThapNhat: "", SoLuongCon: "", moTa: "", hinhAnh: "",
 };
 
+const validateProductForm = (form) => {
+    const e = {};
+    const price = Number(form.giaCoDinh);
+    const discount = Number(form.giaThapNhat || 0);
+    const stock = Number(form.SoLuongCon);
+
+    if (!form.tenSanPham?.trim()) e.tenSanPham = "Vui lòng nhập tên sản phẩm";
+    if (!form.idDanhMuc) e.idDanhMuc = "Vui lòng chọn danh mục";
+    if (!Number.isFinite(price) || price <= 0) e.giaCoDinh = "Giá phải lớn hơn 0";
+    if (!Number.isFinite(discount) || discount < 0 || discount > 100) {
+        e.giaThapNhat = "Giảm giá mặc cả phải từ 0 đến 100%";
+    }
+    if (!Number.isInteger(stock) || stock < 0) e.SoLuongCon = "Số lượng phải là số nguyên không âm";
+
+    return e;
+};
+
 function useCategories() {
     const [list, setList] = useState([]);
     useEffect(() => {

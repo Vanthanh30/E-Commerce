@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { assetUrl, currency, dateTime } from "../../utils/formatters";
 // Lưu ý: Đường dẫn import utils có thể khác tùy thuộc vào thư mục của bạn (ví dụ: '../utils/formatters')
 
-const OrderItem = ({ item }) => {
+const OrderItem = ({ item, onCancel }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const getStatusBadge = (status) => {
     if (status === 1) return "badge-warning";
     if (status === 2 || status === 3) return "badge-info";
@@ -14,6 +16,18 @@ const OrderItem = ({ item }) => {
   const totalQuantity = item.items
     ? item.items.reduce((sum, p) => sum + p.quantity, 0)
     : 0;
+
+  const handleCancel = async () => {
+    if (!window.confirm("Bạn có chắc muốn hủy đơn hàng này?")) return;
+    setCancelling(true);
+    try {
+      await onCancel(item.orderId);
+    } catch (err) {
+      alert(err.message || "Không thể hủy đơn hàng.");
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   return (
     <div
@@ -129,6 +143,37 @@ const OrderItem = ({ item }) => {
             {currency(item.totalAmount)}
           </strong>
         </div>
+      </div>
+
+      {expanded && (
+        <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
+          <div style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 8 }}>
+            Mã đơn: <strong>{item.orderId}</strong>
+          </div>
+          <div style={{ fontSize: 14, color: "var(--text-muted)" }}>
+            Trạng thái: <strong>{item.statusText}</strong>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
+        <button
+          type="button"
+          className="btn btn-outline"
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded ? "Ẩn chi tiết" : "Xem chi tiết"}
+        </button>
+        {item.status === 1 && (
+          <button
+            type="button"
+            className="btn btn-danger"
+            onClick={handleCancel}
+            disabled={cancelling}
+          >
+            {cancelling ? "Đang hủy..." : "Hủy đơn"}
+          </button>
+        )}
       </div>
     </div>
   );

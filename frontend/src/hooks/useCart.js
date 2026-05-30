@@ -36,12 +36,12 @@ export const useCart = () => {
 
     try {
       const user = JSON.parse(sessionStorage.getItem("user"));
-      await cartService.updateQuantity(user.customerId, productId, newQty);
-      setCartItems((prev) =>
-        prev.map((item) =>
-          item.productId === productId ? { ...item, quantity: newQty } : item,
-        ),
+      const response = await cartService.updateQuantity(
+        user.customerId,
+        productId,
+        newQty,
       );
+      setCartItems(response.items || response.data || response || []);
     } catch (err) {
       alert("Không thể cập nhật số lượng.");
     }
@@ -51,10 +51,8 @@ export const useCart = () => {
     if (!window.confirm("Xóa sản phẩm khỏi giỏ hàng?")) return;
     try {
       const user = JSON.parse(sessionStorage.getItem("user"));
-      await cartService.removeItem(user.customerId, productId);
-      setCartItems((prev) =>
-        prev.filter((item) => item.productId !== productId),
-      );
+      const response = await cartService.removeItem(user.customerId, productId);
+      setCartItems(response.items || response.data || response || []);
     } catch (err) {
       alert("Không thể xóa sản phẩm.");
     }

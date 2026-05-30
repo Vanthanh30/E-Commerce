@@ -97,28 +97,80 @@ export async function createOrder(req, res) {
   const { customerId, address, shippingAddress, paymentMethod, status, items } =
     req.body;
 
-  const orderId = "ORD-" + Date.now().toString().slice(-6);
+  if (!customerId || !Array.isArray(items) || items.length === 0) {
+    res.status(400).json({ message: "Invalid order data" });
+    return;
+  }
 
-  const orderItems = items.map((item) => ({
-    productId: item.productId,
-    quantity: item.quantity,
-    salePrice: item.price,
-  }));
+  const cleanAddress = String(address || shippingAddress || "").trim();
+  if (!cleanAddress) {
+    res.status(400).json({ message: "Shipping address is required" });
+    return;
+  }
+
+  const productIds = items.map((item) => item.productId);
+  const products = await Product.find({ productId: { $in: productIds } });
+  const productMap = new Map(products.map((item) => [item.productId, item]));
+  const orderItems = [];
+
+  for (const item of items) {
+    const product = productMap.get(item.productId);
+    const quantity = Math.floor(Number(item.quantity || 0));
+    const salePrice = Number(item.price || 0);
+
+    if (!product) {
+      res.status(404).json({ message: `Product ${item.productId} not found` });
+      return;
+    }
+
+    if (!quantity || quantity < 1 || !Number.isFinite(salePrice) || salePrice <= 0) {
+      res.status(400).json({ message: "Invalid order item" });
+      return;
+    }
+
+    if (Number(product.stock || 0) < quantity) {
+      res.status(400).json({
+        message: `Sản phẩm ${product.name} chỉ còn ${product.stock || 0}`,
+      });
+      return;
+    }
+
+    orderItems.push({
+      productId: item.productId,
+      quantity,
+      salePrice,
+    });
+  }
+
+  const orderId = "ORD-" + Date.now().toString().slice(-6);
 
   const order = await Order.create({
     orderId,
     customerId,
-    shippingAddress: address || shippingAddress || "",
+    shippingAddress: cleanAddress,
     paymentMethod: Number(paymentMethod || 0),
     status: Number(status || 1),
     items: orderItems,
   });
 
-  const productIdsToClear = items.map((item) => item.productId);
-  await CartItem.deleteMany({
-    customerId: customerId,
-    productId: { $in: productIdsToClear },
-  });
+  await Promise.all(
+    orderItems.map((item) =>
+      Product.updateOne(
+        { productId: item.productId },
+        { $inc: { stock: -item.quantity } },
+      ),
+    ),
+  );
+
+  const cartItemIds = items.map((item) => item.cartItemId).filter(Boolean);
+  if (cartItemIds.length > 0) {
+    await CartItem.deleteMany({ customerId, _id: { $in: cartItemIds } });
+  } else {
+    await CartItem.deleteMany({
+      customerId,
+      productId: { $in: productIds },
+    });
+  }
 
   res.status(201).json({ orderId: order.orderId });
 }
@@ -130,15 +182,27 @@ export async function updateOrderStatus(req, res) {
     return;
   }
 
-  const order = await Order.findOneAndUpdate(
-    { orderId: req.params.id },
-    { $set: { status } },
-    { returnDocument: "after" },
-  ).lean();
+  const existing = await Order.findOne({ orderId: req.params.id });
 
-  if (!order) {
+  if (!existing) {
     res.status(404).json({ message: "Order not found" });
     return;
+  }
+
+  const shouldRestoreStock = status === 5 && existing.status !== 5;
+
+  existing.status = status;
+  await existing.save();
+
+  if (shouldRestoreStock) {
+    await Promise.all(
+      existing.items.map((item) =>
+        Product.updateOne(
+          { productId: item.productId },
+          { $inc: { stock: item.quantity } },
+        ),
+      ),
+    );
   }
 
   res.json({

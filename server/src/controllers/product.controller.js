@@ -55,15 +55,40 @@ export async function getTrendingProducts(req, res) {
 }
 
 export async function createProduct(req, res) {
+  const name = String(req.body.name || "").trim();
+  const fixedPrice = Number(req.body.fixedPrice);
+  const minPrice = Number(req.body.minPrice || 0);
+  const stock = Math.floor(Number(req.body.stock));
+
+  if (!name) {
+    res.status(400).json({ message: "Product name is required" });
+    return;
+  }
+
+  if (!Number.isFinite(fixedPrice) || fixedPrice <= 0) {
+    res.status(400).json({ message: "Product price must be greater than 0" });
+    return;
+  }
+
+  if (!Number.isFinite(minPrice) || minPrice < 0 || minPrice > 100) {
+    res.status(400).json({ message: "Bargain discount must be between 0 and 100" });
+    return;
+  }
+
+  if (!Number.isInteger(stock) || stock < 0) {
+    res.status(400).json({ message: "Stock must be a non-negative integer" });
+    return;
+  }
+
   const productId = await nextCode(Product, "productId", "SP");
   const uploaded = await uploadImageBuffer(req.file);
   const product = await Product.create({
     productId,
     categoryId: req.body.categoryId || null,
-    name: req.body.name,
-    fixedPrice: Number(req.body.fixedPrice || 0),
-    minPrice: Number(req.body.minPrice || 0),
-    stock: Number(req.body.stock || 0),
+    name,
+    fixedPrice,
+    minPrice,
+    stock,
     imageUrl: uploaded?.url || req.body.imageUrl || "",
     cloudinaryPublicId: uploaded?.publicId || "",
     description: req.body.description || "",
@@ -74,13 +99,38 @@ export async function createProduct(req, res) {
 }
 
 export async function updateProduct(req, res) {
+  const name = String(req.body.name || "").trim();
+  const fixedPrice = Number(req.body.fixedPrice);
+  const minPrice = Number(req.body.minPrice || 0);
+  const stock = Math.floor(Number(req.body.stock));
+
+  if (!name) {
+    res.status(400).json({ message: "Product name is required" });
+    return;
+  }
+
+  if (!Number.isFinite(fixedPrice) || fixedPrice <= 0) {
+    res.status(400).json({ message: "Product price must be greater than 0" });
+    return;
+  }
+
+  if (!Number.isFinite(minPrice) || minPrice < 0 || minPrice > 100) {
+    res.status(400).json({ message: "Bargain discount must be between 0 and 100" });
+    return;
+  }
+
+  if (!Number.isInteger(stock) || stock < 0) {
+    res.status(400).json({ message: "Stock must be a non-negative integer" });
+    return;
+  }
+
   const uploaded = await uploadImageBuffer(req.file);
   const update = {
     categoryId: req.body.categoryId || null,
-    name: req.body.name,
-    fixedPrice: Number(req.body.fixedPrice || 0),
-    minPrice: Number(req.body.minPrice || 0),
-    stock: Number(req.body.stock || 0),
+    name,
+    fixedPrice,
+    minPrice,
+    stock,
     description: req.body.description || "",
   };
 

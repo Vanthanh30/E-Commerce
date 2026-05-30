@@ -59,6 +59,27 @@
   margin-bottom: 32px;
 }
 
+.product-quantity-control {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  height: 40px;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.product-quantity-control input {
+  width: 64px;
+  height: 100%;
+  border: 0;
+  border-left: 1px solid var(--border, #ddd);
+  border-right: 1px solid var(--border, #ddd);
+  text-align: center;
+  font-size: 14px;
+  outline: none;
+}
+
 .action-row {
   display: flex;
   gap: 16px;

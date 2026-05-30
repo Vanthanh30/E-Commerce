@@ -13,6 +13,7 @@ const mapToFrontend = (b) => ({
     soLuong: b.quantity,
     gia: b.offerPrice,
     giaBan: b.botPrice || b.offerPrice,
+    giaDeXuat: b.suggestedBotPrice,
     thoiGian: b.time ? new Date(b.time).toLocaleString("vi-VN") : "",
     trangThai:
         b.sessionStatus === "expired" ? "Het han" :
@@ -367,7 +368,7 @@ function DetailsView({ selected, onNavigate }) {
                 const latest = sorted[sorted.length - 1];
                 setItem(latest);
                 if (!counterPrice) {
-                    setCounterPrice(latest.botPrice || latest.listedPrice || "");
+                    setCounterPrice(latest.suggestedBotPrice || latest.botPrice || latest.listedPrice || "");
                 }
             } else {
                 setError("Không tìm thấy dữ liệu thương lượng.");

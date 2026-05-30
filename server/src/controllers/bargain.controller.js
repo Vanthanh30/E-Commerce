@@ -2,7 +2,7 @@ import Bargain from "../models/bargain.model.js";
 import Customer from "../models/customer.model.js";
 import Product from "../models/product.model.js";
 import { bargainStatus } from "../helpers/status.helper.js";
-import { processBargain } from "../services/bargain.service.js";
+import { getRoundRequiredPrice, processBargain } from "../services/bargain.service.js";
 
 const MAX_BARGAIN_ROUNDS = 3;
 const AUTO_RESPONSE_MINUTES = 1;
@@ -219,6 +219,10 @@ async function bargainRows({ customerId = null, id = null } = {}) {
         ...baseRow,
         offerPrice: detail.customerPrice,
         botPrice: detail.botPrice,
+        suggestedBotPrice:
+          detail.status === "pending"
+            ? getRoundRequiredPrice(product, detail.round)
+            : detail.botPrice,
         note: detail.botMessage || "",
         customerMessage: detail.customerMessage || "",
         botMessage: detail.botMessage || "",

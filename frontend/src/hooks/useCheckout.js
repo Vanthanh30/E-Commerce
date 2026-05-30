@@ -23,7 +23,22 @@ export const useCheckout = () => {
       // Lấy các sản phẩm trong giỏ hàng để hiển thị soát xét trước khi nhấn mua
       const response = await cartService.getCart(user.customerId);
       const items = response.items || response.data || response || [];
-      setCartItems(items);
+      const selectedIds = JSON.parse(
+        sessionStorage.getItem("checkoutItemIds") || "[]",
+      );
+      const selectedItems =
+        Array.isArray(selectedIds) && selectedIds.length > 0
+          ? items.filter((item) =>
+              selectedIds.includes(item.cartItemId || item.productId),
+            )
+          : items;
+
+      if (selectedItems.length === 0) {
+        navigate("/cart");
+        return;
+      }
+
+      setCartItems(selectedItems);
 
       // Tự động điền trước địa chỉ nếu hồ sơ cá nhân đã có sẵn dữ liệu
       if (user.address) {
@@ -58,9 +73,10 @@ export const useCheckout = () => {
 
       // Gom toàn bộ sản phẩm thành 1 mảng
       const orderItems = cartItems.map((item) => ({
+        cartItemId: item.cartItemId,
         productId: item.productId,
         quantity: item.quantity,
-        price: item.fixedPrice || item.price,
+        price: item.price || item.fixedPrice,
       }));
 
       // Gọi API TẠO 1 ĐƠN HÀNG DUY NHẤT chứa toàn bộ sản phẩm
@@ -73,6 +89,7 @@ export const useCheckout = () => {
       });
 
       alert("Đặt hàng thành công!");
+      sessionStorage.removeItem("checkoutItemIds");
       navigate("/orders");
     } catch (err) {
       alert(

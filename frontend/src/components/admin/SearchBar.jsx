@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import useProductSearch from "../../hooks/useProductSearch";
+import { assetUrl } from "../../utils/formatters";
 
 const SearchBar = ({
     onSelectProduct,
@@ -111,7 +112,7 @@ const SearchBar = ({
                             {/* Thumbnail — dùng đúng field imageUrl từ BE */}
                             {product.imageUrl ? (
                                 <img
-                                    src={product.imageUrl}
+                                    src={assetUrl(product.imageUrl)}
                                     alt={product.name}
                                     style={{ width: 40, height: 40, objectFit: "cover", borderRadius: "6px", flexShrink: 0 }}
                                 />

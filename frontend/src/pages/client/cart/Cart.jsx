@@ -1,22 +1,14 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { currency } from "../../../utils/formatters";
-// Sử dụng Hook và Component đã tách
 import { useCart } from "../../../hooks/useCart";
 import CartItem from "../../../components/client/CartItem";
 import "./cart.css";
 
 const Cart = () => {
   const navigate = useNavigate();
-  // Giao quyền xử lý logic cho Custom Hook
-  const {
-    cartItems,
-    loading,
-    error,
-    updateQuantity,
-    removeItem,
-    calculateTotal,
-  } = useCart();
+  const [selectedIds, setSelectedIds] = useState([]);
+  const { cartItems, loading, error, updateQuantity, removeItem } = useCart();
 
   useEffect(() => {
     if (!sessionStorage.getItem("user")) {
@@ -24,18 +16,66 @@ const Cart = () => {
     }
   }, [navigate]);
 
-  if (loading)
+  const cartItemIds = useMemo(
+    () => cartItems.map((item) => item.cartItemId || item.productId),
+    [cartItems],
+  );
+
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      const validIds = new Set(cartItemIds);
+      const next = prev.filter((id) => validIds.has(id));
+      return next.length || cartItemIds.length === 0 ? next : cartItemIds;
+    });
+  }, [cartItemIds]);
+
+  const selectedItems = cartItems.filter((item) =>
+    selectedIds.includes(item.cartItemId || item.productId),
+  );
+  const isAllSelected =
+    cartItemIds.length > 0 && selectedIds.length === cartItemIds.length;
+
+  const toggleSelectAll = () => {
+    setSelectedIds(isAllSelected ? [] : cartItemIds);
+  };
+
+  const toggleSelectItem = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id],
+    );
+  };
+
+  const calculateSelectedTotal = () =>
+    selectedItems.reduce(
+      (sum, item) => sum + (item.price || item.fixedPrice || 0) * item.quantity,
+      0,
+    );
+
+  const handleCheckout = () => {
+    if (selectedItems.length === 0) {
+      alert("Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.");
+      return;
+    }
+
+    sessionStorage.setItem("checkoutItemIds", JSON.stringify(selectedIds));
+    navigate("/checkout");
+  };
+
+  if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "100px" }}>
         Đang tải giỏ hàng...
       </div>
     );
-  if (error)
+  }
+
+  if (error) {
     return (
       <div style={{ textAlign: "center", padding: "100px", color: "red" }}>
         {error}
       </div>
     );
+  }
 
   return (
     <div className="cart-container page-container">
@@ -57,25 +97,34 @@ const Cart = () => {
         </div>
       ) : (
         <div className="cart-grid">
-          {/* Cột trái: Sử dụng Component tách rời */}
           <div className="cart-items-list">
+            <label className="cart-select-all">
+              <input
+                type="checkbox"
+                checked={isAllSelected}
+                onChange={toggleSelectAll}
+              />
+              <span>Chọn tất cả</span>
+            </label>
+
             {cartItems.map((item) => (
               <CartItem
                 key={item.cartItemId || `${item.productId}-${item.priceType || "fixed"}`}
                 item={item}
+                checked={selectedIds.includes(item.cartItemId || item.productId)}
+                onToggleSelect={toggleSelectItem}
                 onUpdateQuantity={updateQuantity}
                 onRemove={removeItem}
               />
             ))}
           </div>
 
-          {/* Cột phải: Bảng tính tiền (Summary) */}
           <div className="cart-summary-card">
             <h2 className="cart-summary-title">Tóm tắt đơn hàng</h2>
 
             <div className="summary-row">
-              <span>Số lượng mặt hàng</span>
-              <span>{cartItems.reduce((sum, i) => sum + i.quantity, 0)}</span>
+              <span>Sản phẩm đã chọn</span>
+              <span>{selectedItems.reduce((sum, i) => sum + i.quantity, 0)}</span>
             </div>
 
             <div className="summary-row">
@@ -87,12 +136,14 @@ const Cart = () => {
 
             <div className="summary-total">
               <span>Tổng cộng</span>
-              <span>{currency(calculateTotal())}</span>
+              <span>{currency(calculateSelectedTotal())}</span>
             </div>
 
-            <Link
-              to="/checkout"
+            <button
+              type="button"
               className="btn btn-primary btn-block"
+              onClick={handleCheckout}
+              disabled={selectedItems.length === 0}
               style={{
                 marginTop: "24px",
                 height: "46px",
@@ -102,7 +153,7 @@ const Cart = () => {
               }}
             >
               Tiến hành thanh toán
-            </Link>
+            </button>
           </div>
         </div>
       )}

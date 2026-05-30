@@ -9,4 +9,6 @@ export const orderService = {
 
   // Lấy chi tiết một đơn hàng cụ thể dựa vào orderId
   getById: (id) => api.get(`/orders/${id}`),
+
+  cancel: (id) => api.patch(`/orders/${id}/status`, { status: 5 }),
 };

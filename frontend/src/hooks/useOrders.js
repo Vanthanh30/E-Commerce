@@ -31,5 +31,10 @@ export const useOrders = () => {
     fetchOrders();
   }, [fetchOrders]);
 
-  return { orders, loading, error, fetchOrders };
+  const cancelOrder = async (orderId) => {
+    await orderService.cancel(orderId);
+    await fetchOrders();
+  };
+
+  return { orders, loading, error, fetchOrders, cancelOrder };
 };
