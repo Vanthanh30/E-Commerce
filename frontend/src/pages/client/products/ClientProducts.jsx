@@ -12,9 +12,9 @@ const ClientProducts = () => {
   const [allProducts, setAllProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
 
   const currentCategoryId = searchParams.get("categoryId") || "all";
+  const currentPage = parseInt(searchParams.get("page")) || 1;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,7 +50,17 @@ const ClientProducts = () => {
   );
 
   const handlePageChange = (page) => {
-    setCurrentPage(page);
+    searchParams.set("page", page);
+    setSearchParams(searchParams);
+  };
+
+  const handleCategoryChange = (catId) => {
+    const newParams = new URLSearchParams();
+    if (catId !== "all") {
+      newParams.set("categoryId", catId);
+    }
+    newParams.set("page", 1);
+    setSearchParams(newParams);
   };
 
   useEffect(() => {
@@ -101,12 +111,7 @@ const ClientProducts = () => {
         {categories.map((cat) => (
           <button
             key={cat.categoryId}
-            onClick={() => {
-              setSearchParams(
-                cat.categoryId === "all" ? {} : { categoryId: cat.categoryId },
-              );
-              setCurrentPage(1);
-            }}
+            onClick={() => handleCategoryChange(cat.categoryId)}
             className={`btn ${currentCategoryId === cat.categoryId ? "btn-primary" : "btn-outline"}`}
             style={{ borderRadius: "20px" }}
           >
@@ -125,7 +130,6 @@ const ClientProducts = () => {
         )}
       </div>
 
-      {/* PHÂN TRANG DẠNG SỐ */}
       {totalPages > 1 && (
         <div
           style={{
@@ -135,7 +139,6 @@ const ClientProducts = () => {
             marginTop: "40px",
           }}
         >
-          {/* Nút Previous */}
           <button
             className="btn btn-outline"
             disabled={currentPage === 1}
@@ -146,7 +149,6 @@ const ClientProducts = () => {
             </i>
           </button>
 
-          {/* Render các nút số trang */}
           {getPageNumbers().map((page, index) => (
             <button
               key={index}
@@ -165,7 +167,6 @@ const ClientProducts = () => {
             </button>
           ))}
 
-          {/* Nút Next */}
           <button
             className="btn btn-outline"
             disabled={currentPage === totalPages}

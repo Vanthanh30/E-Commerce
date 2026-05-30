@@ -14,9 +14,15 @@ async function ensureCartIndexes() {
     if (err.codeName !== "IndexNotFound" && err.code !== 27) throw err;
   }
 
+  try {
+    await CartItem.collection.dropIndex("customerId_1_productId_1_salePrice_1");
+  } catch (err) {
+    if (err.codeName !== "IndexNotFound" && err.code !== 27) throw err;
+  }
+
   await CartItem.collection.createIndex(
     { customerId: 1, productId: 1, salePrice: 1 },
-    { unique: true }
+    { unique: false },
   );
 
   cartIndexesReady = true;
@@ -24,14 +30,38 @@ async function ensureCartIndexes() {
 
 async function getCartItems(customerId) {
   await ensureCartIndexes();
-  const cart = await CartItem.find({ customerId }).sort({ updatedAt: -1 }).lean();
+  const cart = await CartItem.find({ customerId })
+    .sort({ updatedAt: -1 })
+    .lean();
   const productIds = cart.map((item) => item.productId);
-  const products = await Product.find({ productId: { $in: productIds } }).lean();
+  const products = await Product.find({
+    productId: { $in: productIds },
+  }).lean();
   const productMap = new Map(products.map((item) => [item.productId, item]));
+  const bargains = await Bargain.find({
+    customerId,
+    status: "accepted",
+  }).lean();
 
   return cart.map((item) => {
     const product = productMap.get(item.productId) || {};
     const price = item.salePrice ?? product.fixedPrice ?? 0;
+    let orderSessionExpiresAt = null;
+    if (item.salePrice != null && item.salePrice < product.fixedPrice) {
+      const matchedBargain = bargains.find(
+        (b) =>
+          b.productId === item.productId &&
+          b.details.some(
+            (d) =>
+              d.status === "accepted" &&
+              (d.botPrice === item.salePrice ||
+                d.customerPrice === item.salePrice),
+          ),
+      );
+      if (matchedBargain) {
+        orderSessionExpiresAt = matchedBargain.orderSessionExpiresAt;
+      }
+    }
     return {
       cartItemId: String(item._id),
       customerId: item.customerId,
@@ -45,7 +75,8 @@ async function getCartItems(customerId) {
       priceType: item.salePrice == null ? "fixed" : "bargain",
       imageUrl: product.imageUrl || "",
       stock: product.stock || 0,
-      total: Number(price || 0) * Number(item.quantity || 0)
+      orderSessionExpiresAt,
+      total: Number(price || 0) * Number(item.quantity || 0),
     };
   });
 }
@@ -62,7 +93,12 @@ export async function addToCart(req, res) {
   const quantity = Math.floor(Number(req.body.quantity || 1));
   const salePrice = req.body.price == null ? null : Number(req.body.price);
 
-  if (!customerId || !productId || !Number.isInteger(quantity) || quantity < 1) {
+  if (
+    !customerId ||
+    !productId ||
+    !Number.isInteger(quantity) ||
+    quantity < 1
+  ) {
     res.status(400).json({ message: "Invalid cart item" });
     return;
   }
@@ -105,10 +141,10 @@ export async function addToCart(req, res) {
       return;
     }
 
-    if (bargain.addedToCart) {
-      res.status(409).json({ message: "Bargain already added to cart" });
-      return;
-    }
+    // if (bargain.addedToCart) {
+    //   res.status(409).json({ message: "Bargain already added to cart" });
+    //   return;
+    // }
   }
 
   if (salePrice != null && (!Number.isFinite(salePrice) || salePrice <= 0)) {
@@ -116,17 +152,25 @@ export async function addToCart(req, res) {
     return;
   }
 
-  const normalizedSalePrice = salePrice != null && salePrice > 0 ? salePrice : null;
-  const existing = await CartItem.findOne({ customerId, productId, salePrice: normalizedSalePrice });
+  const normalizedSalePrice =
+    salePrice != null && salePrice > 0 ? salePrice : null;
+  const existing = await CartItem.findOne({
+    customerId,
+    productId,
+    salePrice: normalizedSalePrice,
+  });
   if (existing) {
-    existing.quantity = Math.min(existing.quantity + quantity, product.stock || existing.quantity + quantity);
+    existing.quantity = Math.min(
+      existing.quantity + quantity,
+      product.stock || existing.quantity + quantity,
+    );
     await existing.save();
   } else {
     await CartItem.create({
       customerId,
       productId,
       quantity: Math.min(quantity, product.stock || quantity),
-      salePrice: normalizedSalePrice
+      salePrice: normalizedSalePrice,
     });
   }
 
@@ -149,7 +193,9 @@ export async function updateCartItem(req, res) {
     return;
   }
 
-  const product = await Product.findOne({ productId: cartItem.productId }).lean();
+  const product = await Product.findOne({
+    productId: cartItem.productId,
+  }).lean();
   const requestedQuantity = Math.floor(Number(req.body.quantity || 1));
   if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1) {
     res.status(400).json({ message: "Invalid quantity" });
@@ -158,13 +204,10 @@ export async function updateCartItem(req, res) {
 
   const quantity = Math.min(
     requestedQuantity,
-    Number(product?.stock || req.body.quantity || 1)
+    Number(product?.stock || req.body.quantity || 1),
   );
 
-  await CartItem.updateOne(
-    { _id: cartItem._id },
-    { $set: { quantity } }
-  );
+  await CartItem.updateOne({ _id: cartItem._id }, { $set: { quantity } });
 
   res.json(await getCartItems(req.params.customerId));
 }

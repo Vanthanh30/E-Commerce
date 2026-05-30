@@ -62,8 +62,7 @@ const ProductDetail = () => {
   const handleBargain = () => {
     const userStr = sessionStorage.getItem("user");
     if (!userStr) return navigate("/login");
-    
-    // Chuyển hướng sang trang bargains với productId của sản phẩm hiện tại
+
     navigate(`/bargains?product=${product.productId}`);
   };
 
@@ -80,6 +79,14 @@ const ProductDetail = () => {
 
   return (
     <div className="product-detail-container page-container">
+      {/* NÚT QUAY LẠI THÔNG MINH */}
+      <button className="back-btn-detail" onClick={() => navigate(-1)}>
+        <i className="material-icons" style={{ fontSize: "18px" }}>
+          arrow_back
+        </i>
+        Quay lại bộ sưu tập
+      </button>
+
       <div className="product-detail-grid">
         <div className="product-image-gallery">
           <img src={assetUrl(product.imageUrl)} alt={product.name} />
@@ -118,13 +125,16 @@ const ProductDetail = () => {
                 type="button"
                 className="quantity-btn"
                 onClick={() =>
-                  setQuantity((value) => Math.min(value + 1, product.stock || 1))
+                  setQuantity((value) =>
+                    Math.min(value + 1, product.stock || 1),
+                  )
                 }
                 disabled={quantity >= Number(product.stock || 0)}
               >
                 +
               </button>
             </div>
+
             <div className="action-row">
               <button
                 className="btn btn-primary"
@@ -133,10 +143,7 @@ const ProductDetail = () => {
               >
                 {addingToCart ? "Đang xử lý..." : "Thêm vào giỏ"}
               </button>
-              <button
-                className="btn btn-outline"
-                onClick={handleBargain}
-              >
+              <button className="btn btn-outline" onClick={handleBargain}>
                 Đề xuất giá
               </button>
             </div>
