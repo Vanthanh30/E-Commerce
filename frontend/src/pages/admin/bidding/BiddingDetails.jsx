@@ -16,12 +16,12 @@ const mapToFrontend = (b) => ({
     giaDeXuat: b.suggestedBotPrice,
     thoiGian: b.time ? new Date(b.time).toLocaleString("vi-VN") : "",
     trangThai:
-        b.sessionStatus === "expired" ? "Het han" :
-        b.sessionStatus === "accepted" ? "Da chap nhan" :
-        b.sessionStatus === "rejected" ? "Tu choi" :
-        b.status === "countered" ? "Cho khach phan hoi" :
-        b.status === "pending" ? "Cho khach phan hoi" :
-        "Dang cho admin",
+        b.sessionStatus === "expired" ? "Đã hết hạn" :
+        b.sessionStatus === "accepted" ? "Đã chấp nhận" :
+        b.sessionStatus === "rejected" ? "Từ chối" :
+        b.status === "countered" ? "Đang chờ khách phản hồi" :
+        b.status === "pending" ? "Đang chờ khách phản hồi" :
+        "Đang chờ admin",
     ghiChu: b.note || ""
 });
 
@@ -102,9 +102,9 @@ function DetailRow({ label, value, className = "" }) {
 function BidCard({ item, onClick }) {
     const statusLabel = (() => {
         if (!item.trangThai) return null;
-        if (item.trangThai === "Da chap nhan") return { text: "Da chap nhan", cls: "bd-badge-accepted" };
-        if (item.trangThai === "Tu choi") return { text: "Tu choi", cls: "bd-badge-rejected" };
-        if (item.trangThai === "Het han") return { text: "Het han", cls: "bd-badge-expired" };
+        if (item.trangThai === "Đã chấp nhận") return { text: "Đã chấp nhận", cls: "bd-badge-accepted" };
+        if (item.trangThai === "Từ chối") return { text: "Từ chối", cls: "bd-badge-rejected" };
+        if (item.trangThai === "Đã hết hạn") return { text: "Đã hết hạn", cls: "bd-badge-expired" };
         return { text: item.trangThai, cls: "bd-badge-pending" };
     })();
 

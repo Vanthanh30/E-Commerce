@@ -10,11 +10,11 @@ export function bargainStatus(round, status = "pending") {
 
 export function orderStatus(status) {
   const map = {
-    1: "Cho xac nhan",
-    2: "Da xac nhan",
-    3: "Dang giao",
-    4: "Da giao",
-    5: "Da huy"
+    1: "Chờ xác nhận",
+    2: "Đã xác nhận",
+    3: "Đang giao",
+    4: "Đã giao",
+    5: "Đã hủy"
   };
   return map[Number(status)] || "Khong xac dinh";
 }

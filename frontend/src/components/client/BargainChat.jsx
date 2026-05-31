@@ -64,6 +64,9 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
   const messagesEndRef = useRef(null);
 
   const buildMessages = (bargainData) => {
+    const now = new Date();
+    const isSessionExpired = bargainData.expiredAt && new Date(bargainData.expiredAt) <= now;
+    
     const chatMessages = [
       {
         type: "bot",
@@ -71,6 +74,38 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
         time: new Date(),
       },
     ];
+
+    // Thông báo giới hạn mặc cả theo minPrice của sản phẩm
+    try {
+      const min = Number(bargainData.minPrice || 0);
+      let pctText = "0%";
+      const listed = Number(bargainData.listedPrice || 0);
+      if (min > 100) {
+        const pct = listed > 0 ? Math.round((1 - min / listed) * 100) : 0;
+        pctText = `${pct}% (${Number(min).toLocaleString("vi-VN")} đ)`;
+      } else {
+        pctText = `${min}%`;
+      }
+
+      chatMessages.splice(1, 0, {
+        type: "bot",
+        text: `Vui lòng không mặc cả quá ${pctText} giá trị sản phẩm.`,
+        time: new Date(),
+      });
+    } catch (e) {
+      // ignore formatting errors
+    }
+
+    // Kiểm tra phiên hết hạn ngay cả khi chưa gửi giá
+    if (isSessionExpired && (!bargainData.details || bargainData.details.length === 0)) {
+      chatMessages.push({
+        type: "bot",
+        text: "Phiên thương lượng đã hết hạn. Không thể tiếp tục thỏa thuận.",
+        time: new Date(),
+      });
+      setFinalStatus("expired");
+      return;
+    }
 
     let acceptedPrice = null;
 
@@ -205,6 +240,7 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
           ...fallbackBargain,
           ...latestRow,
           sessionStatus: latestRow.sessionStatus || latestRow.status,
+          expiredAt: latestRow.expiredAt,
           details: detailRows.map((row) => ({
             round: row.round,
             customerPrice: row.offerPrice,
@@ -222,10 +258,25 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
           orderSessionExpiresAt: latestRow.orderSessionExpiresAt || null,
           addedToCart: Boolean(latestRow.addedToCart),
         };
+      } else {
+        // Khi chưa có details, sao chép expiredAt từ fallback
+        bargainData = {
+          ...fallbackBargain,
+          details: [],
+        };
       }
 
       setBargainDetails(bargainData);
       buildMessages(bargainData);
+      
+      // Kiểm tra nếu phiên hết hạn, cập nhật trạng thái
+      if (bargainData.expiredAt) {
+        const now = new Date();
+        const expiredTime = new Date(bargainData.expiredAt);
+        if (now >= expiredTime && bargainData.sessionStatus !== "expired") {
+          setFinalStatus("expired");
+        }
+      }
     } catch (err) {
       setErrorMessage(err.message || "Lỗi khi tải chi tiết phiên thương lượng");
       buildMessages(fallbackBargain);
@@ -237,8 +288,13 @@ const BargainChat = ({ bargain, onComplete, onClose }) => {
   }, [bargain]);
 
   useEffect(() => {
+    // Poll liên tục để kiểm tra expiredAt, không chỉ khi pending
     const latest = bargainDetails.details?.[bargainDetails.details.length - 1];
-    if (latest?.status !== "pending") return undefined;
+    const sessionStatus = bargainDetails.sessionStatus || "negotiating";
+    const isFinal = FINAL_STATUSES.includes(sessionStatus);
+    
+    // Không poll nếu phiên đã kết thúc
+    if (isFinal) return undefined;
 
     const timer = setInterval(() => {
       loadBargainDetails(bargainDetails);

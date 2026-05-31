@@ -21,8 +21,8 @@ async function ensureCartIndexes() {
   }
 
   await CartItem.collection.createIndex(
-    { customerId: 1, productId: 1, salePrice: 1 },
-    { unique: false },
+    { customerId: 1, productId: 1, salePrice: 1, bargainId: 1 },
+    { unique: true },
   );
 
   cartIndexesReady = true;
@@ -47,7 +47,15 @@ async function getCartItems(customerId) {
     const product = productMap.get(item.productId) || {};
     const price = item.salePrice ?? product.fixedPrice ?? 0;
     let orderSessionExpiresAt = null;
-    if (item.salePrice != null && item.salePrice < product.fixedPrice) {
+
+    if (item.bargainId) {
+      const matchedBargain = bargains.find(
+        (b) => b.bargainId === item.bargainId,
+      );
+      if (matchedBargain) {
+        orderSessionExpiresAt = matchedBargain.orderSessionExpiresAt;
+      }
+    } else if (item.salePrice != null && item.salePrice < product.fixedPrice) {
       const matchedBargain = bargains.find(
         (b) =>
           b.productId === item.productId &&
@@ -72,6 +80,7 @@ async function getCartItems(customerId) {
       price,
       fixedPrice: product.fixedPrice || 0,
       salePrice: item.salePrice,
+      bargainId: item.bargainId || null,
       priceType: item.salePrice == null ? "fixed" : "bargain",
       imageUrl: product.imageUrl || "",
       stock: product.stock || 0,
@@ -154,10 +163,12 @@ export async function addToCart(req, res) {
 
   const normalizedSalePrice =
     salePrice != null && salePrice > 0 ? salePrice : null;
+  const normalizedBargainId = bargainId || null;
   const existing = await CartItem.findOne({
     customerId,
     productId,
     salePrice: normalizedSalePrice,
+    bargainId: normalizedBargainId,
   });
   if (existing) {
     existing.quantity = Math.min(
@@ -171,6 +182,7 @@ export async function addToCart(req, res) {
       productId,
       quantity: Math.min(quantity, product.stock || quantity),
       salePrice: normalizedSalePrice,
+      bargainId: normalizedBargainId,
     });
   }
 
